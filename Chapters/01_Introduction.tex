@@ -23,9 +23,9 @@ the students can either choose to be adventurous and build everything from scrat
 or to follow a more standardized route by receiving a basic compiler, called \texttt{hyggec}, and extending it with new
 language features as the course progresses.
 
-This basic compiler, \textt{hyggec}, which we may also refer to as ``the reference implementation'', is written in \texttt{F#},
+This basic compiler, \texttt{hyggec}, which we may also refer to as ``the reference implementation'', is written in \texttt{F\#},
 an ML-based functional programming language, and employs a design that makes use functional programming concepts.
-Here is the issue: far from every student has experience with a functional programming language and even fewer with \texttt{F#}
+Here is the issue: far from every student has experience with a functional programming language and even fewer with \texttt{F\#}
 in particular. This means that the student has an even steeper learning curve having to learn a new language and paradigm
 in addition to the compiler construction curriculum. Also, \texttt{hyggec} emits RISC-V assembly as its target language,
 which the student may not have been exposed to either. One could of course simply list all these topics in the prerequisites,
@@ -42,7 +42,7 @@ Given this knowledge, a way to improve the availability of the course 02247 woul
 get rid of having to learn a new language to write the compiler, but the challenge of learning assembly and machine architecture remains,
 so what would be a suitable target language? The students already know Java and thus have some experience working with the Java Virtual Machine (JVM).
 The JVM is stack-based and sits at a higher level of abstraction compared to assembly, so it is much simpler to learn for someone with no exposure
-to machine languages and embedded development. The last issue is that the functional programming features of \texttt{F#} allows for a concise, 
+to machine languages and embedded development. The last issue is that the functional programming features of \texttt{F\#} allows for a concise, 
 succinct and extensible implementation of the compiler, which would be a desirable trait to retain. Although being know as an Object-Oriented
 language, the later releases of Java since version 21 has added a number of functional programming features.
 
