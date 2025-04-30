@@ -32,12 +32,32 @@ side-effects. There is no objectively better way to declare one paradigm as supe
 others. Rather, some paradigms are more suitable for certain types of applications and 
 problems. 
 
+In the following subsections, we will briefly review the core principles of the two most
+prevalent programming paradigms at the time of writing. That is, Object-Oriented Programming
+and Functional Programming.
+
 \subsection{Object-Oriented Programming and Design}
 
 The term Object-oriented programming was first coined by Alan Kay with the introduction of
 the SmallTalk language, yet other languages like Simula already had support for OOP features
 like classes, inheritance and run-time polymorphism even though the OOP term wasn't commonly
-used yet.
+used yet. The more commonly used or modern interpretation of OOP came forth in the 1990's
+where languages like Java sprung into existence. We shall focus on the latter interpretation
+as this is the most popular one today due to the fact that the most popular languages,
+such as Java, Python and JavaScript/TypeScript, that describes themselves as Object-Oriented
+implements OOP in this way.
+
+OOP has the following four core principles (sometimes referred to as the four pillars) that it adheres to:
+
+\begin{enumerate}
+\item Abstraction
+\item Encapsulation
+\item Inheritance
+\item Polymorphism
+\end{enumerate}
+
+While one might argue that some of these principles are not exclusive to OOP, Inheritance is perhaps one of
+the most distinguishable features that make OOP stand out from other paradigms.
 
 \subsection{Functional Programming}
 
@@ -48,6 +68,8 @@ Calculus is that the fundamental unit of abstraction is anonymous functions, or 
 
 \section{Java and the JVM ecosystem}
 
+In this section, we introduce the relevant material regarding the Java platform
+
 \subsection{Modern Java (JDK 21+)}
 
 When Java was initially released in 1995, it mainly had support for Object-oriented 
@@ -56,9 +78,18 @@ inheritance in the form of both abstract classes and interfaces and method overl
 Since Java 8, there has been a shift towards providing support for more Functional 
 programming features like anonymous functions (lambdas), higher-order functions, immutable
 structures (records), pattern matching and discriminated unions in the form of sealed 
-interfaces. 
+interfaces. We will briefly review a select number of these newer functional features
+and compare them to other functional languages.
 
 \subsection{The Java Virtual Machine (JVM) and JVM bytecode}
+
+The Java platform is more than the Java language. It consists of its own virtual machine,
+the Java Virtual Machine (JVM), which can execute ``class''-files with JVM bytecode, among other things.
+The architecture of the JVM is based on a stack machine, where every frame is pushed on and popped from
+a stack to perform computations. There are multiple different stacks at play in the JVM.
+
+According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
+and does not assume anything about the underlying hardware platform that it runs on.
 
 \section{Programming language theory}
 
