@@ -13,28 +13,61 @@ we seek to get closer to an answer or gain a more refined perspective.
 
 \section{Requirements}
 
-In this section, we use the words "must", "should", "could" and "won't" in accordance with their meaning defined by the MoSCoW prioritization
-technique. To briefly explain, "must" mean that the requirement is critical for the success of the project and thus must be achieved. The
-word "should" means that although the requirement is not critical its completion will bring a lot of value to the project, which could impact
-the result, but is not essential. "Could" means that there is some value to be gained by fulfilling the requirement, but far less than "should"
+In this section, we use the words ``must'', ``should'', ``could'' and ``won't'' in accordance with their meaning defined by the MoSCoW prioritization
+technique. To briefly explain, ``must'' mean that the requirement is critical for the success of the project and thus must be achieved. The
+word ``should'' means that although the requirement is not critical its completion will bring a lot of value to the project, which could impact
+the result, but is not essential. ``Could'' means that there is some value to be gained by fulfilling the requirement, but far less than ``should''
 and is entirely optional.
-Finally, "won't" is the same as declaring a requirement as "could", yet there is no way that it is doable within the allocated time frame for the project.
-As a final note, the set of "must"-requirements form the Minimum-Viable-Product (MVP) in the sense that the project won't be a success unless these
+Finally, ``won't'' is the same as declaring a requirement as ``could'', yet there is no way that it is doable within the allocated time frame for the project.
+As a final note, the set of ``must''-requirements form the Minimum-Viable-Product (MVP) in the sense that the project won't be a success unless these
 requirements are met by the final implementation of the new Hygge compiler, which should henceforth be known by the name \texttt{JHygge}.
+
+The requirements specification is informal in the sense that requirements are specified using natural language rather than rigid unambiguious mathematics.
 
 For the requirements, we must write a compiler for the Hygge programming language, which as a minimum supports the Hygge0 version of the language,
 but should support all the features of the reference implementation, \texttt{hyggec}.
 To validate and verify the implementation of the Hygge programming language, \texttt{JHygge} must include an extensive and rigid test suite.
 
+To summarize, the \texttt{JHygge} compiler has the following functional requirements:
+
+\begin{itemize}
+  \item \texttt{JHygge} must implement all of the Hygge 0 language specification.
+  \item \texttt{JHygge} should implement mutable variables.
+  \item \texttt{JHygge} should implement ``while-do'' loops.
+  \item \texttt{JHygge} should implement functions.
+  \item \texttt{JHygge} should implement structures and field selections.
+  \item \texttt{JHygge} should implement discriminated unions and recursive types.
+  \item \texttt{JHygge} could implement peephole optimization.
+  \item \texttt{JHygge} could implement ANF optimization.
+  \item \texttt{JHygge} won't implement Register Allocation.
+  \item \texttt{JHygge} won't implement Closures.
+  \item \texttt{JHygge} should implement a CLI interface akin to that of \texttt{hyggec}.
+\end{itemize}
+
+Additionally, the \texttt{JHygge} compiler has the following non-functional requirements:
+
+\begin{itemize}
+  \item \texttt{JHygge} must be written in the Java programming language version 24 and make use of functional programming features and design.
+  \item \texttt{JHygge} must have a test suite that can run unit and integration tests for the compile pipeline stages.
+  \item \texttt{JHygge} must make use of a parser generator for implementing the parser, for example ANTLR4, JavaCC, etc.
+  \item \texttt{JHygge} must make use of a framework for generating JVM bytecode, for example ASM, Class-file API, ByteBuddy, etc.
+  \item \texttt{JHygge} should make use of a build and dependency management system, for example Maven, Gradle, Bazel, etc.
+\end{itemize}
+
 \section{Goals}
 
 There are two primary goals of this MSc thesis project:
 
+\begin{itemize}
+  \item To explore the functional language features of newer Java releases and re-architect, redesign and rewrite \texttt{hyggec} in the form of \texttt{JHygge}.
+  \item To explore the Java Virtual Machine along with its bytecode target language and attempt to implement as many features of the Hygge programming language as possible on the JVM.
+\end{itemize}
+
 \section{Non-goals}
 
 To create a successor language to \texttt{Hygge} or vastly alter its specification is not a goal of the project. Rather, we want to create a
-"playground" framework of sorts that allows the students to easily extend the \texttt{Hygge} language as part of the course work in 02247. 
+``playground'' framework of sorts that allows the students to easily extend the \texttt{Hygge} language as part of the course work in 02247. 
 It is also not a goal to implement a parser or parser generator, as many well-tested and proven tools already exist as well as the fact that
-parsing is not an emphasis in neither the course `02247 - Compiler Construction'' nor in this thesis. Although code generation for the JVM platform
+parsing is not an emphasis in neither the course ``02247 - Compiler Construction'' nor in this thesis. Although code generation for the JVM platform
 is very much the emphasis of this thesis, it is not a goal to create a framework to read, write and update Java class-files, as these also exists 
 (most notably ASM and the Class-File API from Java 24).
