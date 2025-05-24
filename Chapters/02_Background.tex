@@ -28,6 +28,16 @@ the Result/Either monad, may be helpful, but not essential to understand the wor
 Furthermore, topics from Object-Oriented Design and Architecture such as ``Low-coupling, High cohesion'', ``Gang of Four'' (GoF) design patterns
 and the ``SOLID'' principles are also useful to know.
 
+\section{Programming language theory and Compiler Construction}
+
+As this project is mainly about writing a compiler, some knowledge of programming language theory is needed.
+Most notably, we recommend a basic understanding of syntax trees, regular expressions and Context-Free Grammars (CFG) from Theory of Computation.
+For describing to rules of the Hygge programming language, we recommend a basic understanding of structural operational semantics, substitutions
+and inference rules from logic. With regards to type systems, it is helpful to be knowledgable about typing rules and the different
+typing disciplines: strong vs. weak, nominal vs. structural and static vs. dynamic.
+
+That is, knowledge corresponding to the curriculum of the course ``02247 - Compiler Construction'' covers all of the mentioned prerequisites.
+
 \section{Java and the JVM ecosystem}
 
 In this section, we introduce the relevant material regarding the Java platform mainly focusing
@@ -69,10 +79,3 @@ a stack to perform computations. There are multiple different stacks at play in 
 According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
 and does not assume anything about the underlying hardware platform that it runs on. This is the basis for the
 ``WORA - Write Once, Run Anywhere'' principle.
-
-\section{Programming language theory and Compiler Construction}
-
-As this project is about writing a compiler, some knowledge of programming language theory is needed. Most notably, we
-recommend a basic understanding of Regular expressions and Context-Free grammars from Theory of Computation.
-For describing to rules of the Hygge programming language, we recommend a basic understanding of (operational) semantics
-and type systems. With regards to type systems 
