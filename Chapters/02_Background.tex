@@ -1,53 +1,17 @@
 \chapter{Background and Prerequisite Knowledge} \label{sec:background}
 
 In order to get the most out of the thesis, we recommend that the reader is familiar with a quite wide variety of topics.
-In this section, we will go through all of required background and prerequisite knowledge, either in great detail in the case of new insights discovered
-as part of the thesis project work, or at a glance if other sources already provide an appropriate in-depth explanation of well-established knowledge.
+In this section, we will go through some of the required background and prerequisite knowledge at varying degrees of detail, perhaps only at a glance if 
+other sources already provide an appropriate in-depth explanation of well-established knowledge.
 
-The knowledge used and discovered in this thesis project spans from rigid math-based topics such as programming language theory to softer subjects such 
-programming paradigms, design patterns and compiler architecture with a very concrete and pragmatic approach by being specifically centered around the Java 
-ecosystem.
+The knowledge used in this thesis project spans from rigid maths-based topics such as programming language theory to softer subjects such 
+programming paradigms, design patterns and compiler architecture. For some of these topics, the reader is only required to have a basic knowledge. 
 
-\section{Programming Paradigms and Styles}
+\section{Programming Languages and Paradigms}
 
-Programming languages have evolved substantially since the first programming language came 
-to fruition with FORTRAN in 1957. Yet, the operating principles of the underlying hardware 
-haven't changed nearly as much. 
-
-Many newer language features provide abstractions and 
-programming constructs that have no effect on how the computer processes data, such as
-classes, namespaces and modules, but these are still important to programmers as it allows
-the programmer to divide the software into logical and coherent components for increased
-readability, reduced maintenance and re-usability. Paradigms like Structural programming, 
-Procedural Programming and Object-Oriented Programming are examples of ways to associate 
-state and behaviour of programs. Other programming features are concerned with how 
-computations are performed. 
-
-Most modern processors are built on the fundamental principles of the abstract Turing 
-machine, which is a type of state machine. A state machine changes its state, which is the 
-essence of Imperative programming; the programmer instructs the computer with commands on
-how and when to mutate state. At the other end of the spectrum, Functional programming takes 
-a different approach by effectively banning mutability and isolating pure computations from 
-side-effects. There is no objectively better way to declare one paradigm as superior to the 
-others. Rather, some paradigms are more suitable for certain types of applications and 
-problems. 
-
-In the following subsections, we will briefly review the core principles of the two most
-prevalent programming paradigms at the time of writing. That is, Object-Oriented Programming
-and Functional Programming.
-
-\subsection{Object-Oriented Programming and Design}
-
-The term Object-oriented programming was first coined by Alan Kay with the introduction of
-the SmallTalk language, yet other languages like Simula already had support for OOP features
-like classes, inheritance and run-time polymorphism even though the OOP term wasn't commonly
-used yet. The more commonly used or modern interpretation of OOP came forth in the 1990's
-where languages like Java sprung into existence. We shall focus on the latter interpretation
-as this is the most popular one today due to the fact that the most popular languages,
-such as Java, Python and JavaScript/TypeScript, that describes themselves as Object-Oriented
-implements OOP in this way.
-
-OOP has the following four core principles (sometimes referred to as the four pillars) that it adheres to:
+We recommend that the reader has knowledge of and experience with programming languages and programming paradigms.
+That is, we suggest that the reader knows at least one Object-Oriented language, preferably Java, and at least one Functional language,
+preferably \texttt{F\#}. This includes knowing the four core principles/the four pillars of Object-Oriented programming:
 
 \begin{enumerate}
 \item Abstraction
@@ -56,32 +20,44 @@ OOP has the following four core principles (sometimes referred to as the four pi
 \item Polymorphism
 \end{enumerate}
 
-While one might argue that some of these principles are not exclusive to OOP, Inheritance is perhaps one of
-the most distinguishable features that make OOP stand out from other paradigms.
+From the Functional programming paradigm, we assume that the reader is familiar with principles such as immutability, referential transparency,
+higher-order functions. This roughly corresponds to the curriculum of the course ``02157 - Functional Programming'' at the Technical University of 
+Denmark. Advanced Functional Programming concepts such as functors, applicative functors and monads, most notably the Maybe/Option monad and
+the Result/Either monad, may be helpful, but not essential to understand the work of this thesis. 
 
-\subsection{Functional Programming}
-
-Functional programming has its root in Alonso Churchs Lambda Calculus, which was shown to
-be computationally equivalent to a Turing Machine; everything a Turing Machine can compute, 
-Lambda Calculus can do the same and vice versa. The defining characteristic of Lambda 
-Calculus is that the fundamental unit of abstraction is anonymous functions, or lambdas. 
+Furthermore, topics from Object-Oriented Design and Architecture such as ``Low-coupling, High cohesion'', ``Gang of Four'' (GoF) design patterns
+and the ``SOLID'' principles are also useful to know.
 
 \section{Java and the JVM ecosystem}
 
 In this section, we introduce the relevant material regarding the Java platform mainly focusing
-on the functional language features of ``modern'' Java (since version 21) and the Java Virtual
+on the functional language features of ``modern'' Java (version 21 and newer) and the Java Virtual
 Machine.
 
 \subsection{Modern Java (JDK 21+)}
 
 When Java was initially released in 1995, it mainly had support for Object-oriented 
-programming, which was quite popular at the time, with features like classes, objects, 
+programming with language features like classes, objects, 
 inheritance in the form of both abstract classes and interfaces and method overloading.
 Since Java 8, there has been a shift towards providing support for more Functional 
 programming features like anonymous functions (lambdas), higher-order functions, immutable
 structures (records), pattern matching and discriminated unions in the form of sealed 
 interfaces. We will briefly review a select number of these newer functional features
 and compare them to other functional languages.
+
+The most relevant features from newer versions of Java, described in their respective ``Java Enhancement Proposals'' (JEP), which will be used in this thesis, are as follows:
+
+\begin{itemize}
+    \item JEP 488 (JDK 24): Primitive Types in Patterns, instanceof, and switch
+    \item JEP 484 (JDK 24): Class-File API
+    \item JEP 441 (JDK 21): Pattern Matching for switch
+    \item JEP 443 (JDK 21): Unnamed Patterns and Variables
+    \item JEP 440 (JDK 21): Record Patterns
+    \item JEP 395 (JDK 17): Records
+    \item JEP 409 (JDK 17): Sealed Classes
+\end{itemize}
+
+Some of these JEPs may have predecessor JEPs for earlier releases of Java, but we have omitted those and only referenced the latest refinements. 
 
 \subsection{The Java Virtual Machine (JVM) and JVM bytecode}
 
@@ -91,18 +67,12 @@ The architecture of the JVM is based on a stack machine, where every frame is pu
 a stack to perform computations. There are multiple different stacks at play in the JVM.
 
 According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
-and does not assume anything about the underlying hardware platform that it runs on.
+and does not assume anything about the underlying hardware platform that it runs on. This is the basis for the
+``WORA - Write Once, Run Anywhere'' principle.
 
-\section{Programming language theory}
+\section{Programming language theory and Compiler Construction}
 
-\subsection{Context-Free Grammars}
-
-\subsection{Parsers}
-
-\subsection{Operational Semantics}
-
-\subsection{Type systems}
-
-\section{Compiler Construction}
-
-\subsection{Architecture and Design}
+As this project is about writing a compiler, some knowledge of programming language theory is needed. Most notably, we
+recommend a basic understanding of Regular expressions and Context-Free grammars from Theory of Computation.
+For describing to rules of the Hygge programming language, we recommend a basic understanding of (operational) semantics
+and type systems. With regards to type systems 

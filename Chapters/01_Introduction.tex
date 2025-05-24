@@ -1,16 +1,9 @@
 \chapter{Introduction}
 
-Modern software engineering was radically changed with the invention of the compiler and higher-level programming languages.
-No longer did programmers have to write lengthy complex assembly to complete rather simple tasks. This allowed the
-programmer to focus on the ideas and to leverage the power of abstraction rather than having to consider the hardware
-platform that the code was supposed to run on. Porting programs to other machines with different Instruction Set Architectures
-(ISA) became easier, since the compiler could be extended with code generation for new platforms and the program itself
-could remain mostly unchanged rather than having to manually translate the assembly by hand. 
-
-Today, compilers, interpretes, higher-level languages and many other forms of programming language technologies are found
+Today, compilers, interpreters, higher-level languages and many other forms of programming language technologies are found
 in all sorts of software toolchains and applications. From compilers and build systems to embedded interpreters in user
-applications, programming language technologies have ubiquitous in the computing landscape. Due to this fact, it is
-more important than ever to teach students, aspiring programmers and software engineers about how they themselves
+applications, programming language technologies have become ubiquitous in the computing landscape. Due to this fact, it is
+more important than ever to teach students, aspiring programmers and software engineers how they themselves
 can create their own compilers from the ground up. That is exactly the purpose of the course ``02247 - Compiler Construction''
 at the Technical University of Denmark (DTU), where graduate students are taught the basics of how to build a programming language.
 The course prerequisites assumes that the students are familiar with basic programming, data structures and algorithms and
@@ -18,35 +11,36 @@ the fundamentals of the theory of computation (mostly inference rules, regular e
 other than that there are no further requirements.
 
 In the course, the students goes through a project, where they have to design and implement iterations of the Hygge programming language.
-The Hygge programming language is a toy language designed by A. Scalas for didatic purposes. A the beginning of the course,
+The Hygge programming language is a toy language designed by A. Scalas for didactic purposes. A the beginning of the course,
 the students can either choose to be adventurous and build everything from scratch, using their programming language of choice,
 or to follow a more standardized route by receiving a basic compiler, called \texttt{hyggec}, and extending it with new
 language features as the course progresses.
 
 This basic compiler, \texttt{hyggec}, which we may also refer to as ``the reference implementation'', is written in \texttt{F\#},
-an ML-based functional programming language, and employs a design that makes use functional programming concepts.
+an ML-based functional programming language, and the Hygge language employs a design that makes use of some functional programming concepts.
 Here is the issue: far from every student has experience with a functional programming language and even fewer with \texttt{F\#}
 in particular. This means that the student has an even steeper learning curve having to learn a new language and paradigm
 in addition to the compiler construction curriculum. Also, \texttt{hyggec} emits RISC-V assembly as its target language,
-which the student may not have been exposed to either. One could of course simply list all these topics in the prerequisites,
-but this would limit the eligibility to very few students. At the master's level, most of the students at DTU are internationals
-hailing from all over the world with a wide variety of educational backgrounds. So, strictening the course prerequisites is not
-a viable solution for its sustainability nor for the goal of educating as many students as possible about compilers and programming
-languages.
+which the student may not have been exposed to either.
 
 The official programming language of DTU Compute, the Department of Applied Mathematics and Computer Science at DTU, is Java, so
 all incoming students for the Master's programme in Computer Science and Engineering (CSE) are expected to have experience with it.
 So too is a course in algorithms and data structures, as the students should be familiar with basic data structures like stacks, trees and lists.
 
-Given this knowledge, a way to improve the availability of the course 02247 would be to write a new Hygge compiler in Java. This would
-get rid of having to learn a new language to write the compiler, but the challenge of learning assembly and machine architecture remains,
-so what would be a suitable target language? The students already know Java and thus have some experience working with the Java Virtual Machine (JVM).
-The JVM is stack-based and sits at a higher level of abstraction compared to assembly, so it is much simpler to learn for someone with no exposure
-to machine languages and embedded development. The last issue is that the functional programming features of \texttt{F\#} allows for a concise, 
-succinct and extensible implementation of the compiler, which would be a desirable trait to retain. Although being know as an Object-Oriented
-language, the later releases of Java since version 21 has added a number of functional programming features.
+Given this knowledge, a way to improve the availability of the course 02247 to more students would be to write a new Hygge compiler in Java. 
+This would get rid of having to learn a new language to write the compiler, but the challenge of learning assembly and machine architecture remains,
+so what would be a suitable target language to replace RISC-V? The students already know Java and thus have some experience working with 
+the Java Virtual Machine (JVM). The JVM is stack-based and sits at a higher level of abstraction compared to assembly, so it is much simpler 
+to learn for someone with no exposure to machine languages and embedded development. The last issue is that the functional programming features
+of \texttt{F\#} allows for a concise, succinct and extensible implementation of the compiler, which would be desirable traits to retain. 
+Although being know as an Object-Oriented language, the later releases of Java since version 21 has added a number of functional programming features.
 
-To summarize, the goal of this MSc thesis project is to implement a new Hygge compiler written in the latest version of the Java programming
-language (version 24), which emits ``class''-files containing JVM bytecode and implement it in a way that makes the most of the familiar
-Object-Oriented programming paradigm while leveraging the strengths of the functional programming features of Java 21 and newer such that
-it appeals to as many MSc CSE students as possible.
+As mentioned, the JVM is a stack-based virtual machine, but what does that mean for code generation? Is is possible to implement all of the semantics
+and the type system such that it will run on the JVM just like in RISC-V? Or will the nature of the JVMs design impose restrictions on the Hygge language?
+Just like code generation is the emphasis of the course ``02247 - Compiler Construction'', so will it be the emphasis for this Master's Thesis project.
+To summarize, this project has two goals:
+
+\begin{itemize}
+    \item Explore the latest versions of Java (JDK 21 and newer) and then re-architect, redesign and rewrite the reference implementation in Java.
+    \item Explore the JVM and its bytecode target language and attempt to implement as many features of the Hygge programming language as possible on the JVM.
+\end{itemize}
