@@ -1,8 +1,24 @@
 \chapter{Compiler Architecture and Design}
 
-In this chapter, we want to go on a journey and explore existing compiler designs and architectures both in general and
-for specific programming languages. These languages of choice are Scala, Kotlin, Groovy and Clojure, which all primarily target the JVM platform,
-yet are very different.
+In this chapter, we discuss general compiler architecture and design as well as the particular design of the reference compiler, \texttt{hyggec}.
+Thereafter, we present an architecture and design proposal for \texttt{JHygge}.
 
-At the end of this journey, after having summarize our findings and attempt to utilize this newly-gained experience to come up with a suitable
-architecture and design for the new Hygge compiler that aims to fulfill all the constraints imposed by the requirements stated in the previous chapter.
+From a birds eye perspective, a compiler is a program that transforms textual input data to some other representation in the form of a target language.
+The target language can be many different types of languages: from low-level machine languages to other high-level programming languages.
+The textual input data usually comes in the form of a data stream, either as a file stream when reading a source file or as a character stream when
+reading user input from a console or tty. The most generic way to describe the typical architecture of a compiler would be the ``Pipes and Filters''
+architectural pattern. In this pattern, the program consists of independent stages of data transformations, which are connected as a unified system.
+As the name of the pattern suggests, there are two types of elements in this architecture: pipes and filters. Filters are stages of data transformations,
+and the pipes are the connections between filters, which acts as data adapters.
+
+The important part about the ``Pipes and Filters'' architectural pattern is that filters are completely independent of each other. One could consider
+every filter to be a separate program. Thus, with the right pipe, or data adapter, any two filters could be connected. If one considers the architecture
+of the \texttt{hyggec} compiler, it has a lexer/parser, a typechecker, an interpreter, an optimizer and a code generator. All of these are filters,
+as they are still independent. For example, the interpreter takes an untyped AST as its input and produces an evaluation in the form of a reduced AST
+and the associated side-effects. The point is that it doesn't matter how the untyped AST input is produced as this is not the responsibility of the
+interpreter. Another example is the typechecker. It takes an untyped AST and produces a typed AST. It doesn't care where the untyped AST input comes
+from nor where the resulting typed AST goes. This means that when viewing the \texttt{hyggec} compiler through the perspective of ``Pipes and Filters'',
+any filter can be placed at any point in the pipeline, where the input and output types match. In functional programming, one could say that this is
+essentially just function composition at the architectural level, as every filter can be viewed as a function with input and output types.
+So this aligns well with the function programming ideas.
+
