@@ -35,10 +35,10 @@ look at this from the perspective of ``pipes and filters'', the input and output
 Going a step further, a functional programmer would perhaps claim that a general compiler is a program that consists of four functions:
 
 \begin{itemize}
-  \item $Lexing : SourceProgram \rarrow TokenStream$
-  \item $Parsing : TokenStream \rarrow AbstractSyntaxTree$
-  \item $Analysis : AbstractSyntaxTree \rarrow IntermediateRepresentation$
-  \item $CodeGeneration : IntermediateRepresentation \rarrow TargetProgram$
+  \item $Lexing : SourceProgram \rightarrow TokenStream$
+  \item $Parsing : TokenStream \rightarrow AbstractSyntaxTree$
+  \item $Analysis : AbstractSyntaxTree \rightarrow IntermediateRepresentation$
+  \item $CodeGeneration : IntermediateRepresentation \rightarrow TargetProgram$
 \end{itemize}
 
 As such, the definition for the function \texttt{Compiler} would be:
