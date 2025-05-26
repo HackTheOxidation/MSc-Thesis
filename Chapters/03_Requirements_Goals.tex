@@ -44,6 +44,11 @@ To summarize, the \texttt{JHygge} compiler has the following functional requirem
   \item \texttt{JHygge} should implement a CLI interface akin to that of \texttt{hyggec}.
 \end{itemize}
 
+With the use of the word ``implement'' in the requirements, we mean that the implementation will provide the same level of support
+for the given feature as the reference compiler \texttt{hyggec} without student modifications. For example, discriminated unions
+and recursive types are only supported by the typechecker and the interpreter, but not the code generator, whereas all the phases
+are supported for functions.
+
 Additionally, the \texttt{JHygge} compiler has the following non-functional requirements:
 
 \begin{itemize}

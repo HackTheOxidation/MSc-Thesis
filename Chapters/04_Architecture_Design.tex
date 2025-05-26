@@ -20,5 +20,49 @@ interpreter. Another example is the typechecker. It takes an untyped AST and pro
 from nor where the resulting typed AST goes. This means that when viewing the \texttt{hyggec} compiler through the perspective of ``Pipes and Filters'',
 any filter can be placed at any point in the pipeline, where the input and output types match. In functional programming, one could say that this is
 essentially just function composition at the architectural level, as every filter can be viewed as a function with input and output types.
-So this aligns well with the function programming ideas.
+So this aligns well with the functional programming ideas.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.3\textwidth]{Pictures/basic_compiler_phases.png}
+\caption{Basic phases of a Compiler made by A. Scalas.}
+\label{fig:compiler_phases}
+\end{figure}
+
+If we consider the general architecture of a compiler as illustrated by A. Scalas on figure, a compiler consists of four overall phases:
+lexing, parsing, analysis and code generation. On figure, we also see the respective inputs and outputs of each phase. If one were to
+look at this from the perspective of ``pipes and filters'', the input and outputs would be the pipes and the phases would be the filters.
+Going a step further, a functional programmer would perhaps claim that a general compiler is a program that consists of four functions:
+
+\begin{itemize}
+  \item $Lexing : SourceProgram \rarrow TokenStream$
+  \item $Parsing : TokenStream \rarrow AbstractSyntaxTree$
+  \item $Analysis : AbstractSyntaxTree \rarrow IntermediateRepresentation$
+  \item $CodeGeneration : IntermediateRepresentation \rarrow TargetProgram$
+\end{itemize}
+
+As such, the definition for the function \texttt{Compiler} would be:
+
+\begin{equation*}
+  Compiler : Lexing \circ Parsing \circ Analysis \circ CodeGeneration
+\end{equation*}
+
+where $\circ$ is the function composition operator. From an Object-Oriented Design perspective, one wouldn't necessarily be thinking about the structure
+of a compiler in terms of function definitions, but instead be concerned with the properties of this architecture. To achieve independent phases, or filters,
+is essential that the system has low coupling (minimal dependence between unrelated components) and high cohesion (related functionality is grouped together).
+
+\section{Compilation phases in detail}
+
+Now that we have been acquainted with the overall structure of a general compiler, we take a closer look a each of the compilation phases in greater detail.
+
+\subsection{Lexing}
+
+\subsection{Parsing}
+
+\subsection{Analysis}
+
+\subsection{Code generation}
+
+\section{The \texttt{hyggec} architecture and design}
+
+\section{Architecture and Design of \texttt{JHygge}}
