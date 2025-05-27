@@ -55,11 +55,31 @@ is essential that the system has low coupling (minimal dependence between unrela
 
 Now that we have been acquainted with the overall structure of a general compiler, we take a closer look a each of the compilation phases in greater detail.
 
-\subsection{Lexing}
+\subsection{Lexing and Parsing}
 
-\subsection{Parsing}
+The purpose of the lexing and parsing is to transform a source file, or character stream, into some form of syntax tree at a suitable representation of
+the program contained within the source file. There are different kinds of syntax trees, but here we'll consider Abstract Syntax Trees (AST) to be the
+most common form. Lexing and Parsing may either be considered as separate or combined phases in the architecture of a compiler.
+
+To specify the syntax of a programming language, one can use a formal grammar. There are different kinds of grammar, but we'll mainly consider Context-Free
+Grammars (CFG), as this kind of grammar is usually sufficient to express all the valid strings of the language. A CFG describes a Context-Free Language (CFL).
+A Push-Down Automata (PDA) is capable of recognizing a CFL. For an in-depth explaination of CFGs, CFLs, PDAs, and the associated challenged, we
+recommend ``Introduction to the Theory of Computation, 3rd Edition'' by M. Sipser.
+
+After having specified the syntax of the programming language to implement, one needs a lexer/parser to recognize it. While some may choose to write a lexer/parser
+from scratch to suit their particular needs, it is often quite time-consuming to implement and verify its correctness, especially when the language evolves with
+frequent changes to the syntax rules. A parser generator is a program that can generate the source code for a parser program given a language syntax specification.
+This can save a lot of development time, especially when prototyping with new language features which require syntax alterations.
+
+There exists many parser generators with support for different programming languages to generate parser programs for. Examples include \texttt{ANTLR4}, \texttt{GNU Bison},
+\texttt{JavaCC} and \textt{FsLexYacc}. Aside from supporting different programming languages, the most distinguishing feature among parser generators are their parsing algorithms.
+There are different parsing algorithms. For the previously mentioned parser generators, \texttt{ANTLR4} uses ``Adaptive LL(*)'', \texttt{FsLexYacc} uses ``LALR'' and \texttt{JavaCC}
+uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the grammar of the programming language.
 
 \subsection{Analysis}
+
+Analysis is an umbrella term for different kinds of program analysis that may be performed at this phase of a compiler. Examples of this includes typechecking, optimizations at the AST-level,
+static analysis, etc. It is also possible that a compiler may perform multiple kinds of analysis.
 
 \subsection{Code generation}
 
