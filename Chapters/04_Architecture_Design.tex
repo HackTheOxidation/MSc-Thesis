@@ -43,9 +43,10 @@ Going a step further, a functional programmer would perhaps claim that a general
 
 As such, the definition for the function \texttt{Compiler} would be:
 
-\begin{equation*}
-  Compiler : Lexing \circ Parsing \circ Analysis \circ CodeGeneration
-\end{equation*}
+\begin{align*}
+  Compiler &: SourceProgram \rightarrow TargetProgram \\
+  Compiler &= Lexing \circ Parsing \circ Analysis \circ CodeGeneration
+\end{align*}
 
 where $\circ$ is the function composition operator. From an Object-Oriented Design perspective, one wouldn't necessarily be thinking about the structure
 of a compiler in terms of function definitions, but instead be concerned with the properties of this architecture. To achieve independent phases, or filters,
