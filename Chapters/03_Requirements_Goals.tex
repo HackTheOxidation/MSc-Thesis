@@ -66,9 +66,18 @@ Together, these fifteen requirements form the specification for the \texttt{JHyg
 There are two primary goals of this MSc thesis project:
 
 \begin{itemize}
-  \item To explore the functional language features of newer Java releases and re-architect, redesign and rewrite \texttt{hyggec} in the form of \texttt{JHygge}.
+  \item To explore the functional language features of newer Java releases and re-architect, redesign and rewrite \texttt{hyggec} in the form of \texttt{JHygge} for an extensible, flexible and user-friendly compiler.
   \item To explore the Java Virtual Machine along with its bytecode target language and attempt to implement as many features of the Hygge programming language as possible on the JVM.
 \end{itemize}
+
+The first goal is about trying to figure out how to create a balanced architecture in the sense that it should be flexible enough for students to easily add new language features or swap out alternative
+implementations for parts of the compiler while at the same time being simple enough to comprehend and navigate. This is something that is hard to quantify, so to evaluate it, we will
+employ a qualitative method, where the end-user (the students) will be given a usability test. In this usability test, the students will attempt to extend the finished compiler with
+a simple language feature in a structured fashion. At the end, the students will describe there experiences using the new \texttt{JHygge} compiler with an emphasis on user-friendliness.
+
+The second goal concerns the other value-creating aspect of this project, namely code generation for the JVM. While it should be possible to perform the same computations on the JVM
+as on a RISC-V machine, whether it is straight-forward in practise is another question. Will the design of the JVM impose restrictions on the Hygge language specification as
+implementing some parts of the language may prove impractical due to an unforseen amount of ``boiler-plate code''?
 
 \section{Non-goals}
 

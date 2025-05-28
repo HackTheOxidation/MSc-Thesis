@@ -79,3 +79,6 @@ a stack to perform computations. There are multiple different stacks at play in 
 According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
 and does not assume anything about the underlying hardware platform that it runs on. This is the basis for the
 ``WORA - Write Once, Run Anywhere'' principle.
+
+JVM bytecode is rather simple in the sense that every instruction is only one byte (except for floats and doubles, which are two bytes, or one word).
+The bytecode in a ``class''-file is also grouped, first by class, then by method.

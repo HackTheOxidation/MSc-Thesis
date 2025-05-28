@@ -80,9 +80,21 @@ uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the 
 \subsection{Analysis}
 
 Analysis is an umbrella term for different kinds of program analysis that may be performed at this phase of a compiler. Examples of this includes typechecking, optimizations at the AST-level,
-static analysis, etc. It is also possible that a compiler may perform multiple kinds of analysis.
+static analysis, etc. It is also possible that a compiler may perform multiple kinds of analysis. While there are many interesting topics in the field of program analysis,
+we will only discuss mostly typechecking and briefly optimization for the sake of keep this discussion in scope of the thesis goals.
+
+Typechecking is the process of checking that the structure of an AST abides to the rules of a type system. There are different type systems with different typing disciples:
+strong vs. weak, static vs. dynamic (and duck), nominal vs. structural. For some programming languages, typechecking is only partial or skipped entirely. Instead,
+an error is generated at runtime when the typing rules are violated. This is typical of languages with dynamic type systems such as \texttt{Python}, \texttt{Ruby} and
+\texttt{JavaScript}. Other programming languages with weak type systems, such as \texttt{C} or \texttt{JavaScript}, perform implicit conversions to make a value ``fit''.
+Languages with static type systems, such as \texttt{F\#}, \texttt{Haskell} and \texttt{Rust}, enforce their typing rules at compile-time using typechecking.
+
+The type system for \texttt{Hygge} is static, strong and structural: Typechecking is enforced at compile-time, primitive types cannot be interchanged, and type
+equivalence for composite types (i.e. structures and discriminated unions) are determined by their underlying structure rather than their names. 
 
 \subsection{Code generation}
+
+The code generation phases of a compiler does exactly that. It converts a well-typed AST to its target-language form by traversing it and generating code.
 
 \section{The \texttt{hyggec} architecture and design}
 
