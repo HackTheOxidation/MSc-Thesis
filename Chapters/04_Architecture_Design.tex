@@ -54,7 +54,8 @@ is essential that the system has low coupling (minimal dependence between unrela
 
 \section{Compilation phases in detail}
 
-Now that we have been acquainted with the overall structure of a general compiler, we take a closer look a each of the compilation phases in greater detail.
+Now that we have been acquainted with the overall structure of a general compiler, we take a closer look a each of the compilation phases in greater detail,
+high-lighting both the purpose as well as some of the challenges associated with each stage.
 
 \subsection{Lexing and Parsing}
 
@@ -75,7 +76,8 @@ This can save a lot of development time, especially when prototyping with new la
 There exists many parser generators with support for different programming languages to generate parser programs for. Examples include \texttt{ANTLR4}, \texttt{GNU Bison},
 \texttt{JavaCC} and \texttt{FsLexYacc}. Aside from supporting different programming languages, the most distinguishing feature among parser generators are their parsing algorithms.
 There are different parsing algorithms. For the previously mentioned parser generators, \texttt{ANTLR4} uses ``Adaptive LL(*)'', \texttt{FsLexYacc} uses ``LALR'' and \texttt{JavaCC}
-uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the grammar of the programming language.
+uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the grammar of the programming language. For example, a CFG may have to be in a right-recursive
+form for an (insert algo) algorithm to recognized the language correctly.
 
 \subsection{Analysis}
 
@@ -95,7 +97,49 @@ equivalence for composite types (i.e. structures and discriminated unions) are d
 \subsection{Code generation}
 
 The code generation phases of a compiler does exactly that. It converts a well-typed AST to its target-language form by traversing it and generating code.
+Code generation strategies vary depending on quite a few parameters and issues: the intended target language, the IR and semantics of the language to generate code for,
+instruction selection, register allocation and assignment, memory management, etc. While there are templating engines and source-to-source compilers,
+also referred to as transpilers, we will focus solely on code generation for Instruction Set Architectures (ISA) in the form of assembly, bytecode or the like.
+For machine languages, such as RISC-V, M68k, Intel x86, etc., all of the previously mentioned issues apply. For targets such as JVM bytecode, the programmer
+doesn't have to take registers and memory management into account as the JVM doesn't have the concept of register and the underlying virtual machine
+implements automatic memory management in the form of garbage collection. Instruction selection and the internal representation of the language are still
+important as the JVM is stack-based and thus compiler has to generate the bytecode instructions in the correct order on the stack for arithmetic and
+logical operations as well as method invocations.
 
 \section{The \texttt{hyggec} architecture and design}
 
+In this section, we briefly present the architecture and design of the reference compiler, \texttt{hyggec}. As \texttt{hyggec} is a didactic compiler,
+some compiler phases may be simpler and fewer compared to that of a compiler for programming languages intended for real-world use.
+Therefore, we will also compare \texttt{hyggec} to other compilers, most notably \texttt{dotty}, the compiler
+for the \texttt{Scala 3} programming language.
+
+In figure \ref{fig:hyggec_compiler_phases}, we see the compiler architecture for \texttt{hyggec} by A. Scalas. If we compare it
+to figure \ref{fig:compiler_phases}, we observe that each stage has been concretized. For lexical analysis and parsing, \texttt{FsLexYacc}
+is used to auto-generate a lexer and a parser to convert a source file into an Intermediate Representation (IR) in the form of an untyped 
+AST. This untyped AST is then undergoing an analysis in the form of typechecking, converting the untyped AST into a typed one. At the
+final phase of the \texttt{hyggec} compiler architecture pipeline, RISC-V code is being generated. Although not illustrated on figure
+\ref{fig:hyggec_compiler_phases}, \texttt{hyggec} also has an interpreter that can consume an AST, typed or not.
+There is also a small degree of optimization in \texttt{hyggec}, most of which the students are asked to implement at the appropriate
+phases during the later part of ``02247 - Compiler Construction''.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.3\textwidth]{Pictures/basic_compiler_phases.png}
+\caption{The compiler architecture of \texttt{hyggec} made by A. Scalas.}
+\label{fig:hyggec_compiler_phases}
+\end{figure}
+
+Looking at the code itself for \texttt{hyggec}, the layout is quite simple; one file per compilation stage as well as a few extra
+files for miscellenious utilities.
+
 \section{Architecture and Design of \texttt{JHygge}}
+
+\subsection{Gradle as a easy-to-use build system}
+
+\subsection{ANTLR4 for parsing}
+
+\subsection{A flexible design for the typechecking, interpretation and code generator stages}
+
+\subsection{Java 24 Class-file API for JVM bytecode generation}
+
+\subsection{PicoCLI for a user-friendly CLI}
