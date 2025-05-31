@@ -74,11 +74,20 @@ Some of these JEPs may have predecessor JEPs for earlier releases of Java, but w
 The Java platform is more than the Java language. It consists of its own virtual machine,
 the Java Virtual Machine (JVM), which can execute ``class''-files with JVM bytecode, among other things.
 The architecture of the JVM is based on a stack machine, where every frame is pushed on and popped from
-a stack to perform computations. There are multiple different stacks at play in the JVM.
+a stack to perform computations. There are multiple different stacks at play in the JVM, one for each
+thread in the JVM, as well as native method stacks. A stack stores frames, which themselves store data
+and partial results associated with computation of a method. A frame is created upon method invocation
+and destroyed upon method termination no matter the cause (normal or abrupt). Every frame has an array
+of local variables (also called local storage), its own operand stack and a reference to the run-time
+constant pool of the class of the associated method. A run-time constant pool is a table of constant
+values contained within every class for sharing constants among the methods of the class. The JVM
+also manages its own heap which is shared among all java virtual threads. Both JVM stacks and the heap
+are user configurable; they may either be of a fixed size, or dynamic only limited by the memory of
+the machine that it runs on.
 
 According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
 and does not assume anything about the underlying hardware platform that it runs on. This is the basis for the
 ``WORA - Write Once, Run Anywhere'' principle.
 
-JVM bytecode is rather simple in the sense that every instruction is only one byte (except for floats and doubles, which are two bytes, or one word).
-The bytecode in a ``class''-file is also grouped, first by class, then by method.
+JVM bytecode is rather simple in the sense that every instruction is only one byte (except for longs and doubles, which are two bytes, or one word).
+The bytecode in a ``class''-file is also grouped, first by class, then by method, to reflect the structure of the JVM discussed earlier.
