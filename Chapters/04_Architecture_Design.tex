@@ -130,16 +130,114 @@ phases during the later part of ``02247 - Compiler Construction''.
 \end{figure}
 
 Looking at the code itself for \texttt{hyggec}, the layout is quite simple; one file per compilation stage as well as a few extra
-files for miscellenious utilities.
+files for miscellenious utilities. The AST is modelled in a functional style using mutually recursively-defined records and discriminated
+unions, \texttt{Node} and \texttt{Expr}. A \texttt{Node} represents a node in the syntax tree and contains information about the
+position in the source file, the typing environment, the type, and most importantly the expression at this node. An \texttt{Expr}
+represents the all posible expressions in the Hygge language, which may be either a terminal expression such as a value or identifier
+or composite expression which have child nodes. Since the Hygge language consists exclusively of expressions, this kind of model is
+able to capture the entire language. The lexer and parser defined in \texttt{Lexer.fsl} and \texttt{Parser.fsy}, respectively,
+constructs instances of \texttt{Node}s and \texttt{Expr}s to form an AST upon successfully parsing a source file.
+
+The AST instances constructed by the generated parser are untyped as they contain no type information and no typing environment.
+To annotate the AST with typing information, the typechecker implements the \texttt{typer} function, which 
 
 \section{Architecture and Design of \texttt{JHygge}}
 
-\subsection{Gradle as a easy-to-use build system}
+Now that we've discussed the architecture and design of the reference compiler, \texttt{hyggec}, we'll attempt to come up with
+a refined architecture and design for the new compiler, \texttt{JHygge}. The reason we call it a refined architecture is due to
+the fact that \texttt{hyggec} has many good design points for its intended purpose. The design is simple and minimal; very
+few types and functions that form a straight-forward pipeline. There are however some less desirable consequences of this.
+
+The design is not very flexible as there is a lot of coupling, some code duplication and deeply nested code. The different
+phases depend on concretizations rather than interfaces and they are monoliths; for example, the interpreters \texttt{reduce}
+implements the entire set of reduction rules, aside from a few miscellanious utilities. If a student wants to compare two different
+implementation strategies for a while loop, for example, they have to change to overwrite the existing code and then test it,
+potentially getting confused along the way. The same principle applies for the typechecker and code generator as well.
+
+\subsection{Gradle as an easy-to-use build system}
+
+When using \texttt{F\#}, the \texttt{dotnet} CLI provides a simple build and project management tool which comes by default
+with the installation of the \textit{.NET}-platform. In the Java world, the choice is a little more nuanced as there is
+no standard build system supplied with an installation of a JDK. There are, however, quite a few choices, with some of the
+most popular choices being Apache \texttt{Maven}, \textit{Gradle} and Googles \textit{Bazel} built system.
+
+Assuming that the incoming students don't have any experience with any particular build system, it is desirable that the
+build system of choice for \texttt{JHygge} is as easy to learn and use to lessen the burden. \textit{Maven} is very
+powerful; it uses a declarative approach to specify a project and its build tasks using the Project Object Model (POM,
+written in an XML file).
+However, it is also quite complicated with concepts like ``Archetypes'', ``Extensions'', workflow, lifecycle and more,
+which will be a barrier to entry for students.
+
+\textit{Bazel} is a newer offering from Google, which is meant to be a scalable, multi-platform and multi-language open source
+build system. To use \textit{Bazel}, one has to initial a project ``workspace'' and then specify what to build using a \texttt{BUILD}
+file written in a Domain-Specific Language (DSL) called \texttt{starlark}. This may sound simple, but we find that there are a few
+issues for our case: in every build file, one has to specify all source files explicitly using \textit{Bazel}s own query language,
+which is different from that of both \textit{Maven} and \textit{Gradle}. Also, installing \textit{Bazel} itself is quite strange,
+as the \textit{Bazel} authors recommend that one uses the \texttt{bazelisk} installation tool, which itself must be installed using
+the \textit{Node Package Manager}, \texttt{npm}, which is a tool for \texttt{javascript} packages. So, there are a lot of dependencies
+required to install the build tool in the first place. This is likely to confuse students that are not familiar with all of these tools.
+
+Lastly, there is \textit{Gradle}, which as the title of this subsection suggests is our choice of build system. Why?
+\textit{Gradle} is easy to install, or rather to not install, as one can simply place a self-containing wrapper inside the project
+(\texttt{gradle-wrapper.jar} executable, plus some \texttt{gradlew} wrapper scripts). So, the students don't have to install anything
+this way. The \texttt{gradlew} wrapper script provides a CLI similar to that of the \texttt{dotnet} CLI tool. In terms of required
+configuration files, \textit{Gradle} requires a \texttt{build.gradle} (or \texttt{build.gradle.kts}) file, where the user can specify
+the project metadata, plugins, dependencies and tasks in either the \textit{Groovy} or the \textit{Kotlin} programming language.
+This \texttt{build.gradle} file is written in a concise and declarative style, where the \textit{Gradle} framework provides an
+easy to use DSL. For version management of dependencies, one can optionally use a \texttt{libs.versions.toml} file to separate
+dependency versioning from task specification. That's it, the student won't have to install anything besides Java and they
+can build the project in one simple command: \texttt{gradlew build}.
 
 \subsection{ANTLR4 for parsing}
 
+Similar to \texttt{hyggec}, we want to use a parser generator tool for ease-of-use as the course ``02247'', as well as this
+thesis itself, focuses mostly on the later phases of compilation. We have explored two options, \texttt{JavaCC} and \texttt{ANTLR4},
+which both looked promising initially. We started out using \texttt{JavaCC} as it is quite similar to \texttt{FsLexYacc} used by
+\texttt{hyggec} in the hope that we could maintain a similar design. This turned out to be disappointing, as the parser file
+grew fast when adding language features: before reaching the \texttt{Hygge0} specification, the parser file had grown to 563
+lines of code, which by comparison is approximately 89 percent more than the combined 298 lines of code for the lexer and
+parser in \texttt{hyggec} (\texttt{Hygge0} branch). However, the worst part was that \texttt{JavaCC} generated invalid java
+code for the parser; it couldn't compile. Upon encountering these issues, we realised that \texttt{JavaCC} would incur a
+high degree of complexity as well as a buggy code generation, which will degrade user experience and increase the maintainance
+burden.
+
+So, we tried out \texttt{ANTLR4} instead. \texttt{ANTLR4} is quite different from \texttt{JavaCC}; it uses a \texttt{.g4} grammar
+file to specify the syntax of the language in a format similar to E-BNF. \texttt{ANTLR4} will then generate a parser that converts
+an input stream to an AST of its own. This AST is intended to be consumed by visitors and listeners; a visitor will transform and
+compute a result from an AST, whereas a listener will only perform some kind of side-effect without returning a result. As we
+intend to keep the AST model from \texttt{hyggec}, we can use a visitor to generate \texttt{Node}s and \texttt{Expr}s from the
+\texttt{ANTLR4} AST. We will discuss the implementation and its evaluation later. Another bonus benefit is that \texttt{ANTLR4}
+is capable of generating parsers in other languages such as \texttt{python}, \texttt{c++} and \texttt{go}. While this doesn't
+impact the development of \texttt{JHygge}, one could reuse the \texttt{.g4} grammar file for the base Hygge language if some
+students wanted to do a custom project in another language.
+
 \subsection{A flexible design for the typechecking, interpretation and code generator stages}
+
+As mentioned earlier in the description of the architecture of the \texttt{hyggec} compiler, the design is inflexible as it
+depends on concretizations rather than interfaces. So, we seek a design that is more aligned with the \textit{SOLID} principles.
 
 \subsection{Java 24 Class-file API for JVM bytecode generation}
 
+The \texttt{hyggec} compiler implements its own abstraction layer for RISC-V assembly to ease the implementation of the code
+generation phase. This is one the good points about the \texttt{hyggec} compiler, which we want to maintain in the \texttt{JHygge}
+compiler. Instead of writing an abstraction layer from scratch, we seek to utilize an existing framework for manipulating JVM
+bytecode.
+
+Luckily, there are a few well-maintained frameworks out there. Perhaps, the most interesting framework is the introduction of the
+Class-file API with the release of Java 24. This is a built-in framework for performing CRUD operations on java `.class`-files
+that comes with every JDK from Java 24 onwards. As an alternative, there is the ASM framework, which is widely used in compilers
+and related projects such as OpenJDK, the \textit{Groovy} compiler and the \textit{Kotlin} compiler. While both provide the
+same functionality that we seek, the Class-file API has two advantages: it comes with the JDK out-of-box, so there is no
+need to manage any additional dependencies, and it has a declarative API which fits in with the function programming style.
+
+As a counter argument, one could say that ASM has seen more real-world use, and that there is nothing wrong with a more imperative
+API, but the declarative style employed by the Class-file API and the reduction in the number of external dependencies is very
+appealing. As such, we have selected the Java 24 Class-file API as the framework of choice for JVM bytecode generation.
+
 \subsection{PicoCLI for a user-friendly CLI}
+
+The \texttt{hyggec} compiler has a CLI for invoking the different compiler phases on a source file. This is a very useful feature,
+when the student want to quickly test an arbitrary hygge program, so we want to maintain a similar CLI in the \texttt{JHygge} compiler.
+\texttt{hyggec} uses the \texttt{CommandLineParser} library. In the Java world, there is a similar framework called \texttt{PicoCLI},
+which provides a flexibility in creating a custom commandline argument parser for multiple different JVM languages. This project
+is well maintained and is used by some of the Apache projects, like \texttt{Groovy}, \texttt{Hive} and \texttt{Hadoop}, at the time of writing.
