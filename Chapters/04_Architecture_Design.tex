@@ -139,7 +139,12 @@ able to capture the entire language. The lexer and parser defined in \texttt{Lex
 constructs instances of \texttt{Node}s and \texttt{Expr}s to form an AST upon successfully parsing a source file.
 
 The AST instances constructed by the generated parser are untyped as they contain no type information and no typing environment.
-To annotate the AST with typing information, the typechecker implements the \texttt{typer} function, which 
+To annotate the AST with typing information, the typechecker implements the \texttt{typer} function, which updates every \texttt{Node}
+with a \texttt{Type} and a \texttt{TypingEnv} according to the typing rules. There are a few utility functions, but the \texttt{typer}
+function does most of work for typing judgements case-by-case through pattern matching on the expression of a \texttt{Node}. This
+approach of having a single function to do (almost) all of the work, then use pattern matching to work the different cases and
+finally return a \texttt{Result} monad also applies to the interpreter and code generator phases. While these functions many have
+different inputs and produce different outputs, the overall design is the same.
 
 \section{Architecture and Design of \texttt{JHygge}}
 
@@ -213,8 +218,11 @@ students wanted to do a custom project in another language.
 
 \subsection{A flexible design for the typechecking, interpretation and code generator stages}
 
-As mentioned earlier in the description of the architecture of the \texttt{hyggec} compiler, the design is inflexible as it
-depends on concretizations rather than interfaces. So, we seek a design that is more aligned with the \textit{SOLID} principles.
+As mentioned earlier when high-lighting the weak points of the architecture of the \texttt{hyggec} compiler, the design is inflexible as it
+depends on concretizations rather than abstractions. So, we seek a design that is more aligned with the \textit{SOLID} principles
+to increase flexibility, extensibility and decoupling. Our proposed solution is that we split up the \texttt{typer}, \texttt{reduce}
+and \texttt{codeGen} functions by grouping the expressions of the Hygge language by feature. We then define interfaces that the
+different components can depend on.
 
 \subsection{Java 24 Class-file API for JVM bytecode generation}
 
