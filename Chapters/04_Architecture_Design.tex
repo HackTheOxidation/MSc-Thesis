@@ -224,6 +224,14 @@ to increase flexibility, extensibility and decoupling. Our proposed solution is 
 and \texttt{codeGen} functions by grouping the expressions of the Hygge language by feature. We then define interfaces that the
 different components can depend on.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.3\textwidth]{Pictures/Diagrams/jhygge_all_classes.svg}
+\caption{All classes of \texttt{JHygge} and their relations}
+\label{fig:compiler_phases}
+\end{figure}
+
+
 \subsection{Java 24 Class-file API for JVM bytecode generation}
 
 The \texttt{hyggec} compiler implements its own abstraction layer for RISC-V assembly to ease the implementation of the code
