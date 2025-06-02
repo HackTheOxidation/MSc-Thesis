@@ -24,7 +24,7 @@ So this aligns well with the functional programming ideas.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.3\textwidth]{Pictures/basic_compiler_phases.png}
+\includegraphics[width=\textwidth]{Pictures/basic_compiler_phases.png}
 \caption{Basic phases of a Compiler made by A. Scalas.}
 \label{fig:compiler_phases}
 \end{figure}
@@ -124,7 +124,7 @@ phases during the later part of ``02247 - Compiler Construction''.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.3\textwidth]{Pictures/basic_compiler_phases.png}
+\includegraphics[width=\textwidth]{Pictures/hyggec_compiler_phases.png}
 \caption{The compiler architecture of \texttt{hyggec} made by A. Scalas.}
 \label{fig:hyggec_compiler_phases}
 \end{figure}
@@ -226,11 +226,38 @@ different components can depend on.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.3\textwidth]{Pictures/Diagrams/jhygge_all_classes.svg}
+\includegraphics[width=\textwidth]{Pictures/Diagrams/jhygge_all_classes.png}
 \caption{All classes of \texttt{JHygge} and their relations}
-\label{fig:compiler_phases}
+\label{fig:jhygge_all_classes}
 \end{figure}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/ast_classes.png}
+\caption{The classes of \texttt{ast} package in \texttt{JHygge} and their relations}
+\label{fig:ast_classes}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/interpreter_classes.png}
+\caption{The classes of the \texttt{interpreter} package in \texttt{JHygge} and their relations}
+\label{fig:interpreter_classes}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/codegenerator_classes.png}
+\caption{The classes of the \texttt{codegenerator} package in \texttt{JHygge} and their relations}
+\label{fig:codegenerator_classes}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/typechecker_classes.png}
+\caption{The classes of the \texttt{typechecker} package in \texttt{JHygge} and their relations}
+\label{fig:typechecker_classes}
+\end{figure}
 
 \subsection{Java 24 Class-file API for JVM bytecode generation}
 
@@ -249,6 +276,13 @@ need to manage any additional dependencies, and it has a declarative API which f
 As a counter argument, one could say that ASM has seen more real-world use, and that there is nothing wrong with a more imperative
 API, but the declarative style employed by the Class-file API and the reduction in the number of external dependencies is very
 appealing. As such, we have selected the Java 24 Class-file API as the framework of choice for JVM bytecode generation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/jvm_codegenerator_classes.png}
+\caption{Implementation classes of the code generator interfaces for the JVM backend in \texttt{JHygge}}
+\label{fig:jvm_codegenerator_classes}
+\end{figure}
 
 \subsection{PicoCLI for a user-friendly CLI}
 
