@@ -6,6 +6,38 @@ of the \texttt{JHygge} compiler based on the requirements stated in the \ref{sec
 
 \section{Does JHygge fulfill the requirements?}
 
+In this section, we discuss the degree to which the new \texttt{JHygge} compiler fulfills the functional and non-functional requirements
+stated in \ref{sec:requirements}.
+
+\subsection{Structural typing on the nominal JVM; not a good cocktail}
+
+As per the Hygge language specification, the typing system for Hygge is structural. \texttt{hyggec} showed that implementing this typing system
+in RISC-V is possible. The story for the JVM backend in \texttt{JHygge} is quite different; we found that there was no straight forward solution
+for implementing the structural Hygge typing system directly on the JVM, as the JVM implements its own nominal subtyping rules based on inheritance.
+
+In the \texttt{Scala} programming language, it is possible to imitate structural typing using the trait \texttt{scala.Selectable}, but this is
+due to the additional abstractions provided by the \texttt{Scala} standard library.
+
 \section{Modern Java is not quite functional, yet}
 
+In this thesis, we have investigated the newer versions of \texttt{Java} specifically with an emphasis on functional programming features.
+Although, some of the functional features have been added to the language, \texttt{Java} is still primarily an Object-Oriented language.
+It lacks a lot of the more powerful features of other functional languages such as \texttt{Haskell}, \texttt{F\#} and \texttt{Rust},
+most notably, functions as first-class citizens, support for monads and functors, algebraic data types.
+
+Regarding monads, the \texttt{Java} standard library does provide the \texttt{Optional} monad, but there are a few problems such as the
+fact that it is not implemented as a discriminated union (sealed interface) and thus is not supported by pattern matching in
+\texttt{switch}-expressions. Also, instances of \texttt{Optional} are not type-safe as one can still assign \texttt{null} to them.
+
+Another very useful and common monad, which is also used in \texttt{hyggec}, is the \texttt{Result}-monad. This is useful for monadic
+and explicit error handling in functional languages, but it is simply lacking in \texttt{Java} 24. Instead, \texttt{Java} relies on
+exceptions as its primary way of handling errors. As such, the \texttt{JHygge} implementation relies on exceptions for error handling.
+
+Furthermore, \texttt{Java} also lacks support for tuples as a built-in data type; this means that one is forced to create small ad-hoc
+classes for grouping related data in situations where one does not care about naming a new type.
+
 \section{The Class-file API in action}
+
+Although the previous section evaluating our experiences with \texttt{Java} as a functional programming language came out as rather disappointing,
+this section will be a lot more positive as we found that the Java 24 Class-file API to not just work as advertised, but also to provide a
+reasonably intuitive API that leveraged functional programming concepts such as immutability.

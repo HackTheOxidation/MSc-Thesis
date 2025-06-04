@@ -76,8 +76,7 @@ This can save a lot of development time, especially when prototyping with new la
 There exists many parser generators with support for different programming languages to generate parser programs for. Examples include \texttt{ANTLR4}, \texttt{GNU Bison},
 \texttt{JavaCC} and \texttt{FsLexYacc}. Aside from supporting different programming languages, the most distinguishing feature among parser generators are their parsing algorithms.
 There are different parsing algorithms. For the previously mentioned parser generators, \texttt{ANTLR4} uses ``Adaptive LL(*)'', \texttt{FsLexYacc} uses ``LALR'' and \texttt{JavaCC}
-uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the grammar of the programming language. For example, a CFG may have to be in a right-recursive
-form for an (insert algo) algorithm to recognized the language correctly.
+uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the grammar of the programming language. For example, a CFG may have to be free of left-recursion for an ``LL(1)'' algorithm to recognize the language correctly.
 
 \subsection{Analysis}
 
@@ -159,6 +158,12 @@ implements the entire set of reduction rules, aside from a few miscellanious uti
 implementation strategies for a while loop, for example, they have to change to overwrite the existing code and then test it,
 potentially getting confused along the way. The same principle applies for the typechecker and code generator as well.
 
+So, overall there are a lot of good things that we want to keep. We want to keep the same compiler phases: Lexing/Parsing, Typechecking,
+Interpretation and Code Generation. We want to keep the user-friendly CLI and the same kind of testing suite. The things that we
+want to change is the implementation language (\texttt{F\#} to \texttt{Java}), the specific build system and parser generator,
+the target language (RISC-V assembly to JVM bytecode), and most profoundly, the internal design of the typechecking, interpretation
+and code generator phases.
+
 \subsection{Gradle as an easy-to-use build system}
 
 When using \texttt{F\#}, the \texttt{dotnet} CLI provides a simple build and project management tool which comes by default
@@ -224,39 +229,55 @@ to increase flexibility, extensibility and decoupling. Our proposed solution is 
 and \texttt{codeGen} functions by grouping the expressions of the Hygge language by feature. We then define interfaces that the
 different components can depend on.
 
+In figure \ref{fig:jhygge_all_classes} we provide an
+overview of the most important classes of \texttt{JHygge} and their internal relations. On its own, this is not enough to explain or proposed design
+changes, but is serves as a reference for the classes, interfaces, exceptions, etc. that we will be discussing.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Pictures/Diagrams/jhygge_all_classes.png}
-\caption{All classes of \texttt{JHygge} and their relations}
+\caption{All classes of \texttt{JHygge} and their relations. Made using the Diagrams plugin in JetBrains IntelliJ.}
 \label{fig:jhygge_all_classes}
 \end{figure}
+
+Rather than following the \texttt{hyggec} approach of, for the most part, putting every related function and type in the same source file
+for each compiler phase, we have decided to split up each phase into multiple files for a few reasons. Firstly, we assume that the \texttt{Java}
+implementation will be lengthier than the \texttt{F\#} one due to \texttt{Java}s presumably more verbose syntax, and it is generally good
+practice to put every class, interface, exception, etc. in its own source file. Also, this distribution over multiple files and packages
+means that every file will follow the separation of concerns principle and improve rigidity (as defined in ``Clean Code'' by R. C. Martin). 
+
+Looking solely at the components of the \texttt{ast} package shown in \ref{fig:ast_classes}, it contains almost the same constructs as \texttt{AST.fs} in \texttt{hyggec}, so not much has changed
+except for the introduction of the \texttt{ANTLRHyggeNodeVisitor}, which is due to the dependency on \texttt{ANTLR4}.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{Pictures/Diagrams/ast_classes.png}
-\caption{The classes of \texttt{ast} package in \texttt{JHygge} and their relations}
+\caption{The classes of \texttt{ast} package in \texttt{JHygge} and their relations. Made using the Diagrams plugin in JetBrains IntelliJ.}
 \label{fig:ast_classes}
 \end{figure}
+
+In the \texttt{interpreter} is where we being to see some significant changes in design compared to \texttt{hyggec}; there are interfaces for
+every grouping of 
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{Pictures/Diagrams/interpreter_classes.png}
-\caption{The classes of the \texttt{interpreter} package in \texttt{JHygge} and their relations}
+\caption{The classes of the \texttt{interpreter} package in \texttt{JHygge} and their relations. Made using the Diagrams plugin in JetBrains IntelliJ.}
 \label{fig:interpreter_classes}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/codegenerator_classes.png}
-\caption{The classes of the \texttt{codegenerator} package in \texttt{JHygge} and their relations}
-\label{fig:codegenerator_classes}
+\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/typechecker_classes.png}
+\caption{The classes of the \texttt{typechecker} package in \texttt{JHygge} and their relations. Made using the Diagrams plugin in JetBrains IntelliJ.}
+\label{fig:typechecker_classes}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/typechecker_classes.png}
-\caption{The classes of the \texttt{typechecker} package in \texttt{JHygge} and their relations}
-\label{fig:typechecker_classes}
+\includegraphics[width=0.7\textwidth]{Pictures/Diagrams/codegenerator_classes.png}
+\caption{The classes of the \texttt{codegenerator} package in \texttt{JHygge} and their relations. Made using the Diagrams plugin in JetBrains IntelliJ.}
+\label{fig:codegenerator_classes}
 \end{figure}
 
 \subsection{Java 24 Class-file API for JVM bytecode generation}
@@ -280,9 +301,14 @@ appealing. As such, we have selected the Java 24 Class-file API as the framework
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{Pictures/Diagrams/jvm_codegenerator_classes.png}
-\caption{Implementation classes of the code generator interfaces for the JVM backend in \texttt{JHygge}}
+\caption{Implementation classes of the code generator interfaces for the JVM backend in \texttt{JHygge}. Made using the Diagrams plugin in JetBrains IntelliJ.}
 \label{fig:jvm_codegenerator_classes}
 \end{figure}
+
+Following our design approach outlined in the previous subsection, we propose a design for the JVM code generation backend to consist of the
+classes shown in figure \ref{fig:jvm_codegenerator_classes}. This design still follows the separation of concerns principle, however we have chosen to not make interfaces for everything
+as we assume that there will only be one code generation backend for JVM bytecode, where potential improvements will be implemented implace.
+This is also due to the fact that the code generation strategies may be very different for different target languages.
 
 \subsection{PicoCLI for a user-friendly CLI}
 
