@@ -247,7 +247,7 @@ practice to put every class, interface, exception, etc. in its own source file. 
 means that every file will follow the separation of concerns principle and improve rigidity (as defined in ``Clean Code'' by R. C. Martin). 
 
 Looking solely at the components of the \texttt{ast} package shown in \ref{fig:ast_classes}, it contains almost the same constructs as \texttt{AST.fs} in \texttt{hyggec}, so not much has changed
-except for the introduction of the \texttt{ANTLRHyggeNodeVisitor}, which is due to the dependency on \texttt{ANTLR4}.
+except for the introduction of the \texttt{ANTLRHyggeNodeVisitor} and the \texttt{ANTLRHyggeErrorListener}, which is due to the dependency on \texttt{ANTLR4}.
 
 \begin{figure}[H]
 \centering
@@ -257,7 +257,15 @@ except for the introduction of the \texttt{ANTLRHyggeNodeVisitor}, which is due 
 \end{figure}
 
 In the \texttt{interpreter} is where we being to see some significant changes in design compared to \texttt{hyggec}; there are interfaces for
-every grouping of 
+every grouping of language features and then there is a \texttt{HyggeInterpreterFactory} for creating instances of \texttt{HyggeInterpreter}s.
+The important part is that one is no longer intended to directly create concrete instances of some interpreter, that is all handled by
+the factory, which also constructs and injects the correct dependencies of the concrete interpreter. This gives the students more flexibility
+if they, for example, would want to compare different implementations of the same language feature, they can easily swap between implementations
+due to dependency injection and the factory class. Perhaps, the students may want to change the interpretation strategy, so with this design
+the students can keep the default interpreter as a reference, while implementing the new strategy incrementally. It is important to note that
+from a technical standpoint, this design only requires the programmer to implement the \texttt{HyggeInterpreter}, so the programmer is completely
+free to use the remaining interfaces that partially define the interpretation for a grouping of language features. Note also, that there is a
+\texttt{standard} package which implements the same interpretation strategy from \texttt{hyggec}.
 
 \begin{figure}[H]
 \centering
@@ -266,12 +274,24 @@ every grouping of
 \label{fig:interpreter_classes}
 \end{figure}
 
+Overall, we repeat this pattern for both the typechecker and the code generator phases as they share the same structure albeit providing different
+transformations and effects. On figure \ref{fig:typechecker_classes}, we see the exact same structure and separation of concerns for the typechecker as we saw for the interpreter. 
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{Pictures/Diagrams/typechecker_classes.png}
 \caption{The classes of the \texttt{typechecker} package in \texttt{JHygge} and their relations. Made using the Diagrams plugin in JetBrains IntelliJ.}
 \label{fig:typechecker_classes}
 \end{figure}
+
+The code generator design is slightly different as shown on figure \ref{fig:codegenerator_classes}. The premise is different to that of the typechecker and interpreter because we don't define
+exact rules for the code generation strategy except for the semantics and we expect that there will not only be potentially many code generator backends,
+but the target languages of the backend may differ greatly. For example, RISC-V assembly and JVM bytecode are not only different from a syntactic point
+of view, but the underlying machines/hardware have almost nothing in common, so it doesn't make sense to try to create some generalized abstractions;
+the JVM is stack-based with managed memory, which isn't the case for RISC-V. By adding another backend, say LLVM IR, this would make generalization
+even more difficult. So, rather than coming up with fragile abstractions, we decided to only provide a basic \texttt{HyggeCodeGenerator} interface
+along with a factory and then let the programmer decide the best strategy for each backend. There is also a \texttt{jvm} package, which will be
+discussed in the following subsection.
 
 \begin{figure}[H]
 \centering
