@@ -47,7 +47,7 @@ To summarize, the \texttt{JHygge} compiler has the following functional requirem
 With the use of the word ``implement'' in the requirements, we mean that the implementation will provide the same level of support
 for the given feature as the reference compiler \texttt{hyggec} without student modifications. For example, discriminated unions
 and recursive types are only supported by the typechecker and the interpreter, but not the code generator, whereas all the phases
-are supported for functions.
+are supported for functions. We suggest that the reader inspects the source code of \texttt{hyggec} to 
 
 Additionally, the \texttt{JHygge} compiler has the following non-functional requirements:
 
@@ -85,5 +85,8 @@ To create a successor language to \texttt{Hygge} or vastly alter its specificati
 ``playground'' framework of sorts that allows the students to easily extend the \texttt{Hygge} language as part of the course work in 02247. 
 It is also not a goal to implement a parser or parser generator, as many well-tested and proven tools already exist as well as the fact that
 parsing is not an emphasis in neither the course ``02247 - Compiler Construction'' nor in this thesis. Although code generation for the JVM platform
-is very much the emphasis of this thesis, it is not a goal to create a framework to read, write and update Java class-files, as these also exists 
-(most notably ASM and the Class-File API from Java 24).
+is very much the emphasis of this thesis, it is not a goal to create a framework to read, write and update Java class-files, as this kind of
+software already exists (most notably ASM and the Class-file API from Java 24).
+
+For a formal specification of the syntax, operational semantics, reduction rules, substitution rules, typing rules, etc. we refer to the lecture
+notes of the course ``02247 - Compiler Construction''.

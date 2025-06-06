@@ -20,7 +20,6 @@ interpreter. Another example is the typechecker. It takes an untyped AST and pro
 from nor where the resulting typed AST goes. This means that when viewing the \texttt{hyggec} compiler through the perspective of ``Pipes and Filters'',
 any filter can be placed at any point in the pipeline, where the input and output types match. In functional programming, one could say that this is
 essentially just function composition at the architectural level, as every filter can be viewed as a function with input and output types.
-So this aligns well with the functional programming ideas.
 
 \begin{figure}[H]
 \centering
@@ -100,7 +99,7 @@ Code generation strategies vary depending on quite a few parameters and issues: 
 instruction selection, register allocation and assignment, memory management, etc. While there are templating engines and source-to-source compilers,
 also referred to as transpilers, we will focus solely on code generation for Instruction Set Architectures (ISA) in the form of assembly, bytecode or the like.
 For machine languages, such as RISC-V, M68k, Intel x86, etc., all of the previously mentioned issues apply. For targets such as JVM bytecode, the programmer
-doesn't have to take registers and memory management into account as the JVM doesn't have the concept of register and the underlying virtual machine
+doesn't have to take registers and memory management into account as the JVM doesn't have the concept of registers and the underlying virtual machine
 implements automatic memory management in the form of garbage collection. Instruction selection and the internal representation of the language are still
 important as the JVM is stack-based and thus compiler has to generate the bytecode instructions in the correct order on the stack for arithmetic and
 logical operations as well as method invocations.

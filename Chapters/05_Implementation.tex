@@ -1,10 +1,210 @@
 \chapter{Implementation}
 
 At this point, we have arrived at a suitable architecture and design for \texttt{JHygge}, the new Hygge compiler, so this chapter concerns the actual
-implementation. Here, we emphasize the use of the new functional features of modern Java (JDK 21 and up) and present the final implementation. 
+implementation. Here, we emphasize the use of the new functional features of modern Java (JDK 21 and up) and present the highlights
+of the final implementation of \texttt{JHygge}. 
 
 \section{Use of Functional Java: Records, Sealed Interfaces, Pattern matching and Monads}
 
 \section{Parsing Hygge source files with ANTLR4}
 
+As mentioned in the chapter on Architecture and Design, we have selected ANTLR4 as the parser generator of choice. For starters,
+we have translated the \texttt{FsLexYacc} lexer and parser files, \texttt{Lexer.fsl} and \texttt{Parser.fsy}, to ANTLR4
+\texttt{.g4}-format. In the listing below, we show the complete \texttt{.g4} grammar file for the final version of \texttt{JHygge}.
+
+\begin{lstlisting}
+grammar Hygge;
+
+@header {
+package io.github.hacktheoxidation.hygge;
+}
+
+prog: expression EOF;
+
+expression: TYPE ID EQUAL pretype SEQ expression                                        # TypeAlias
+    | LET (MUTABLE)? variable (ASCRIPTION pretype)? EQUAL simpleExpr SEQ expression     # LetDeclare
+    | FUN variable parenArgTypesSeq ASCRIPTION pretype EQUAL simpleExpr SEQ expression  # FunDeclare
+    | curlyExpr expression                                                              # Curly
+    | sequenceExpr                                                                      # Seq
+    ;
+
+curlyExpr: LCURLY expression RCURLY                                       # Scope
+    ;
+
+sequenceExpr: simpleExpr SEQ expression                                   # Sequence
+    | simpleExpr                                                          # Simple
+    ;
+
+simpleExpr: ifExpr                                                        # If
+    | curlyExpr                                                           # Brackets
+    | WHILE simpleExpr DO simpleExpr                                      # While
+    | primaryExpr LARROW simpleExpr                                       # Assignment
+    | FUN parenArgTypesSeq RARROW simpleExpr                              # Lambda
+    | MATCH simpleExpr WITH LCURLY matchCases RCURLY                      # Match
+    ;
+
+ifExpr: IF simpleExpr THEN simpleExpr ELSE simpleExpr                     # IfThenElse
+    | orExpr                                                              # Or
+    ;
+
+orExpr: orExpr OR andExpr                                                 # LogicalOr
+    | andExpr                                                             # And
+    ;
+
+andExpr: andExpr AND relExpr                                              # LogicalAnd
+    | relExpr                                                             # Rel
+    ;
+
+relExpr: addExpr EQUAL addExpr                                            # Equality
+    | addExpr LESS addExpr                                                # RelLess
+    | addExpr                                                             # Add
+    ;
+
+addExpr: addExpr ADD multExpr                                             # ArithAdd
+    | multExpr                                                            # Mult
+    ;
+
+multExpr: multExpr MUL unaryExpr                                          # ArithMul
+    | unaryExpr                                                           # Unary
+    ;
+
+unaryExpr: NOT unaryExpr                                                  # LogicalNot
+    | READINT ('(' ')' | '()')                                            # ReadInt
+    | READFLOAT ('(' ')' | '()')                                          # ReadFloat
+    | PRINT '(' simpleExpr ')'                                            # Print
+    | PRINTLN '(' simpleExpr ')'                                          # PrintLine
+    | ASSERT '(' simpleExpr ')'                                           # Assertion
+    | ascriptionExpr                                                      # Ascription
+    | primaryExpr parenExprCommaSeq                                       # Application
+    ;
+
+ascriptionExpr: primaryExpr ASCRIPTION pretype                            # TypeAscription
+    | primaryExpr                                                         # Primary
+    ;
+
+primaryExpr: LPAREN simpleExpr RPAREN                                     # Parens
+    | value                                                               # Val
+    | variable                                                            # Var
+    | STRUCT LCURLY structFieldInitSeq RCURLY                             # StructCons
+    | primaryExpr DOT field                                               # FieldSelect
+    | label LCURLY expression RCURLY                                      # UnionCons
+    ;
+
+
+value : INT | FLOAT | BOOL | STRING | UNIT ;
+variable : ID ;
+field : ID ;
+label: ID ;
+
+pretype : parenTypesSeq RARROW pretype
+    | STRUCT LCURLY structFieldTypeSeq RCURLY
+    | UNION LCURLY unionLabelTypeSeq RCURLY
+    | ID
+    ;
+
+
+parenArgTypesSeq: UNIT
+    | LPAREN (variable ASCRIPTION pretype (COMMA variable ASCRIPTION pretype)*) RPAREN
+    ;
+
+parenTypesSeq: UNIT
+    | LPAREN (pretype (COMMA pretype)*) RPAREN
+    ;
+
+parenExprCommaSeq: UNIT
+    | LPAREN (simpleExpr (COMMA simpleExpr)*) RPAREN
+    ;
+
+structFieldInitSeq: field EQUAL simpleExpr (SEQ field EQUAL simpleExpr)*;
+
+structFieldTypeSeq: field ASCRIPTION pretype (SEQ field ASCRIPTION pretype)*;
+
+unionLabelTypeSeq: label ASCRIPTION pretype (SEQ label ASCRIPTION pretype)*;
+
+matchCases: label LCURLY variable RCURLY RARROW simpleExpr (SEQ label LCURLY variable RCURLY RARROW simpleExpr)*;
+
+// Reserved keywords and operators
+ASSERT : 'assert' ;
+READINT : 'readInt' ;
+READFLOAT : 'readFloat' ;
+PRINT : 'print' ;
+PRINTLN : 'println';
+NOT : 'not' ;
+ADD : '+' ;
+SUB : '-' ;
+MUL : '*' ;
+LESS : '<' ;
+AND : 'and' ;
+OR : 'or' ;
+IF : 'if' ;
+THEN : 'then' ;
+ELSE : 'else' ;
+LET : 'let' ;
+TYPE : 'type' ;
+EQUAL : '=' ;
+LPAREN : '(' ;
+RPAREN : ')' ;
+LCURLY : '{' ;
+RCURLY : '}' ;
+ASCRIPTION : ':' ;
+SEQ : ';' ;
+COMMA : ',' ;
+DOT : '.' ;
+LARROW : '<-' ;
+RARROW : '->' ;
+MUTABLE : 'mutable' ;
+WHILE : 'while' ;
+DO : 'do' ;
+FUN : 'fun' ;
+STRUCT : 'struct' ;
+UNION : 'union' ;
+MATCH : 'match' ;
+WITH : 'with' ;
+
+// Values and Names
+INT : [0-9]+ ;
+FLOAT : INT '.' INT ('f' | 'F') ;
+BOOL : 'true' | 'false' ;
+STRING : '"' (~["\\\r\n] | EscapeSequence)* '"' ;
+UNIT : '()' ;
+ID: [a-zA-Z_][a-zA-Z_0-9]* ;
+WS: [ \t\n\r\f]+ -> skip ;
+LINE_COMMENT: '//' ~[\r\n]* -> skip ;
+
+fragment EscapeSequence: '\\' [btnfr"'\\] ; 
+\end{lstlisting}
+
+Initially, this grammar file was syntactically more similar to the E-BNF for the \texttt{Hygge} specification as an attempt to
+simplify the grammar file as much as possible. However, the \texttt{Hygge} grammar specification does not take operator
+precedence into account, so it was later decided to factor out left-recursion and enforce operator precedence by separating
+production rules similar to that of \texttt{Parser.fsy} in \texttt{hyggec}.
+
 \section{Generating JVM bytecode with the Class-file API from Java 24}
+
+The Class-file API promises a declarative approach to reading, modifying and writing \texttt{.class}-files. The main parts of the
+API used in the implementation of the JVM backend in \texttt{JHygge} is the \texttt{ClassBuilder} and the \texttt{CodeBuilder}.
+A \texttt{ClassBuilder} is intended for modifying classes at a higher-level, such as adding attributes, constructors and methods,
+without directly handling bytecode. A \texttt{CodeBuilder} is then used to construct the sequence of bytecode instructions in
+a method or a constructor.
+
+\begin{lstlisting}[language=Java]
+  // From JVMCodeGenerator.java
+  @Override
+  public void generateCode(Node<E, T> ast, String fileName) throws IOException {
+    var filePath = Path.of("HyggeMain.class").toAbsolutePath();
+    System.out.println("Compiling '" + fileName + "' to: " + filePath);
+    ClassFile.of()
+        .buildTo(
+            filePath,
+            ClassDesc.of("HyggeMain"),
+            classBuilder -> {
+              var codeGeneratorEnvironment = new JVMCodeGeneratorEnvironment(classBuilder);
+              classBuilder.withMethodBody(
+                  "main",
+                  ofDescriptor("([Ljava/lang/String;)V"),
+                  ClassFile.ACC_PUBLIC | ClassFile.ACC_STATIC,
+                  codeBuilder ->
+                      generateCode(ast, codeGeneratorEnvironment, codeBuilder).return_());
+            });
+  }
+\end{lstlisting}

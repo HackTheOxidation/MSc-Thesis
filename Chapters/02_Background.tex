@@ -73,6 +73,10 @@ Some of these JEPs may have predecessor JEPs for earlier releases of Java, but w
 
 The Java platform is more than the Java language. It consists of its own virtual machine,
 the Java Virtual Machine (JVM), which can execute ``class''-files with JVM bytecode, among other things.
+According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
+and does not assume anything about the underlying hardware platform that it runs on. This is the basis for the
+``WORA - Write Once, Run Anywhere'' principle.
+
 The architecture of the JVM is based on a stack machine, where every frame is pushed on and popped from
 a stack to perform computations. There are multiple different stacks at play in the JVM, one for each
 thread in the JVM, as well as native method stacks. A stack stores frames, which themselves store data
@@ -82,12 +86,96 @@ of local variables (also called local storage), its own operand stack and a refe
 constant pool of the class of the associated method. A run-time constant pool is a table of constant
 values contained within every class for sharing constants among the methods of the class. The JVM
 also manages its own heap which is shared among all java virtual threads. Both JVM stacks and the heap
-are user configurable; they may either be of a fixed size, or dynamic only limited by the memory of
+are user configurable; they may either be of a fixed size or dynamic only limited by the memory of
 the machine that it runs on.
 
-According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
-and does not assume anything about the underlying hardware platform that it runs on. This is the basis for the
-``WORA - Write Once, Run Anywhere'' principle.
-
 JVM bytecode is rather simple in the sense that every instruction is only one byte (except for longs and doubles, which are two bytes, or one word).
-The bytecode in a ``class''-file is also grouped, first by class, then by method, to reflect the structure of the JVM discussed earlier.
+The bytecode in a ``class''-file is also grouped, first by class then by method, to reflect the structure of the JVM discussed earlier.
+To illustrate this, let's go through a small example. In the code snippet below, we show a simple \texttt{Java} program containing a static
+\texttt{main()}-method, an instance method and a constructor:
+
+\begin{lstlisting}[language=Java]
+class Main {
+    private int foo;
+    private boolean bar;
+
+    public Main(int foo, boolean bar) {
+        this.foo = foo;
+        this.bar = bar;
+    }
+
+    public void whatTheFoo() {
+        if (foo == 42) {
+            System.out.println("This is very meaningful!");
+        } else {
+            System.out.println("This makes no sense at all!");
+        }
+    }
+
+    public static void main(String[] args) {
+        var main = new Main(1, true);
+        main.whatTheFoo();
+    }
+}
+\end{lstlisting}
+
+What the code above does is not important. If one then compiles the code with \texttt{javac} (OpenJDK 24.0.0) and then
+dissassembles the resulting \texttt{.class}-file with \texttt{javap}, one obtains (depending on JDK release and compiler flags)
+the following JVM bytecode in human-readable form:
+
+\begin{lstlisting}
+class Main {
+  private int foo;
+
+  private boolean bar;
+
+  public Main(int, boolean);
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: iload_1
+         6: putfield      #7                  // Field foo:I
+         9: aload_0
+        10: iload_2
+        11: putfield      #13                 // Field bar:Z
+        14: return
+
+
+  public void whatTheFoo();
+         0: aload_0
+         1: getfield      #7                  // Field foo:I
+         4: bipush        42
+         6: if_icmpne     20
+         9: getstatic     #17                 // Field java/lang/System.out:Ljava/io/PrintStream;
+        12: ldc           #23                 // String This is very meaningful!
+        14: invokevirtual #25                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        17: goto          28
+        20: getstatic     #17                 // Field java/lang/System.out:Ljava/io/PrintStream;
+        23: ldc           #31                 // String This makes no sense at all!
+        25: invokevirtual #25                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        28: return
+
+
+  public static void main(java.lang.String[]);
+         0: new           #8                  // class Main
+         3: dup
+         4: iconst_1
+         5: iconst_1
+         6: invokespecial #33                 // Method "<init>":(IZ)V
+         9: astore_1
+        10: aload_1
+        11: invokevirtual #36                 // Method whatTheFoo:()V
+        14: return
+
+}
+\end{lstlisting}
+
+Note, that in this example, the run-time constant pool for \texttt{Main} has been removed for the sake of brevity and readability.
+Comparing this bytecode with its equivalent \texttt{Java} source program, they are quite similar in terms of structure.
+Syntactically, one can say that it is a mix of \texttt{Java} and assembly-like instructions. Every instruction belongs to a
+method and every method is part of a class. Notice that a constructor for a class is not that different from a method at
+the bytecode level; both constructors and instance methods have a reference to the object at local storage byte offset zero.
+The primary difference is that the constructor invokes the \texttt{Object} constructor and calls
+for invoking the \texttt{Main} constructor itself must be done using the \texttt{invokespecial} instruction. On the other
+hand, calling instance methods and static methods are done using the \texttt{invokevirtual} and \texttt{invokestatic} instructions,
+respectively. The hashmarks with numbers, i.e. \#33, are references to the run-time constant pool.
