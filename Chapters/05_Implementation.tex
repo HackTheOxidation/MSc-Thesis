@@ -6,6 +6,138 @@ of the final implementation of \texttt{JHygge}.
 
 \section{Use of Functional Java: Records, Sealed Interfaces, Pattern matching and Monads}
 
+As the purpose of this thesis is also to explore the newer functional features of \texttt{Java}. The existing implementation of \texttt{hyggec}
+is indeed very functional, so we attempted to write the implementations of both the AST, typechecker and interpreter in such a way that
+the \texttt{JHygge} versions are as close to those of \texttt{hyggec}, disregarding the architectural and design differences. Some of
+the newer functional features of \texttt{Java} we wanted to investigate include records (immutable classes), sealed interfaces (discriminated unions),
+switch expressions (pattern matching) and the introduction of some monads, most notably \texttt{Optional}. In the following sections,
+we show concrete examples of implementation, where we have attempted to use said features and compare them to the corresponding code
+in \texttt{hyggec}.
+
+\subsection{Records and Sealed Interfaces for functional data modelling}
+
+The \texttt{Node} and \texttt{Expr} data model for the AST from \texttt{hyggec} is one of the parts that we wish to carry over in \texttt{JHygge}.
+This requires support for discriminated unions and recursive data type, the former of which was introduced in JDK 17 in the form of sealed
+interfaces; one declares a finite number of exact specializations upon defining the interface itself. This gives the \texttt{Java} compiler
+information about the possible specialization, which it can use to perform case analysis and thus enforce exhaustive pattern matching. Let's
+see records and sealed interfaces in action in the form of \texttt{JHygge}s implementation of \texttt{Expr} in the listing below:
+
+\begin{lstlisting}[language=Java]
+// From Expr.java, reformatted to be more compact and fit within the margins
+public sealed interface Expr<E, T>
+    permits Expr.UnitVal, Expr.BoolVal, Expr.IntVal, Expr.FloatVal,
+        Expr.StringVal, Expr.Var, Expr.BinaryOperator, Expr.Not,
+        Expr.ReadInt, Expr.ReadFloat, Expr.Print, Expr.PrintLn,
+        Expr.If, Expr.Seq, Expr.Type, Expr.Ascription,
+        Expr.Assertion, Expr.Let, Expr.Assign, Expr.While,
+        Expr.Lambda, Expr.Application, Expr.StructCons,
+        Expr.FieldSelect, Expr.Pointer, Expr.UnionCons,
+        Expr.Match {
+    // ...
+}
+\end{lstlisting}
+
+Similar to discriminated unions in \texttt{F\#}, all cases are declared for the sealed interface \texttt{Expr}. However, unlike \texttt{F\#},
+the cases have to be defined as separate classes, records or interfaces. In the case that a specialization is a class, they have to be \texttt{final}.
+
+\begin{lstlisting}[language=Java]
+  // From Expr.java, Not<E, T> is an inner class of Expr<E, T>
+  record Not<E, T>(Node<E, T> arg) implements Expr<E, T> {
+    @Override
+    public String prettyPrint(int indentation) {
+      indentation += 2;
+      return "Not(arg=" + arg.expr().prettyPrint(indentation) + ")";
+    }
+  }
+\end{lstlisting}
+
+\subsection{Switch expressions for case-by-case definitions and dispatching}
+
+\begin{lstlisting}[language=Java]
+  // From StandardHyggeInterpreter.java, slightly reformatted
+  @Override
+  public Optional<InterpreterResult<E, T>> reduce(RuntimeEnvironment<E, T> env, Node<E, T> node) {
+    return switch (node.expr()) {
+      case UnitVal<E, T> _,
+          BoolVal<E, T> _,
+          IntVal<E, T> _,
+          FloatVal<E, T> _,
+          StringVal<E, T> _,
+          Pointer<E, T> _ ->
+          Optional.empty();
+      case Var<E, T> v when env.isMutable(v.name()) ->
+          InterpreterResult.of(env, env.mutables().get(v.name()));
+      case Var<E, T> _ -> Optional.empty();
+      case BinaryOperator<E, T> v -> binaryOperatorReducer.reduce(this, env, node, v);
+      case Not<E, T> v ->
+          (v.arg().expr() instanceof BoolVal<E, T> b)
+              ? InterpreterResult.of(env, node.with(b.not()))
+              : reduce(env, v.arg())
+                  .map(a -> new InterpreterResult<>(env, node.with(new Not<>(a.node()))));
+      case ReadInt<E, T> v -> ioReducer.reduce(this, env, node, v);
+      case ReadFloat<E, T> v -> ioReducer.reduce(this, env, node, v);
+      case Print<E, T> v -> ioReducer.reduce(this, env, node, v);
+      case PrintLn<E, T> v -> ioReducer.reduce(this, env, node, v);
+      case If<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
+      case Seq<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
+      case Type<E, T> v -> letReducer.reduce(this, env, node, v);
+      case Ascription<E, T> v -> letReducer.reduce(this, env, node, v);
+      case Assertion<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
+      case Let<E, T> v -> letReducer.reduce(this, env, node, v);
+      case Assign<E, T> v -> letReducer.reduce(this, env, node, v);
+      case While<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
+      case Application<E, T> v -> functionReducer.reduce(this, env, node, v);
+      case Lambda<E, T> v -> functionReducer.reduce(this, env, node, v);
+      case StructCons<E, T> v -> structReducer.reduce(this, env, node, v);
+      case FieldSelect<E, T> v -> structReducer.reduce(this, env, node, v);
+      case UnionCons<E, T> v -> unionReducer.reduce(this, env, node, v);
+      case Match<E, T> v -> unionReducer.reduce(this, env, node, v);
+    };
+  }
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java]
+  // From StandardHyggeControlFlowReducer.java
+  @Override
+  public Optional<InterpreterResult<E, T>> reduce(
+      HyggeInterpreter<E, T> interpreter,
+      RuntimeEnvironment<E, T> env,
+      Node<E, T> node,
+      Seq<E, T> seqExpr) {
+    var nodes = seqExpr.nodes();
+
+    if (nodes.isEmpty()) {
+      return InterpreterResult.of(env, node.with(new UnitVal<>()));
+    }
+
+    if (nodes.size() == 1) {
+      var last = nodes.getFirst();
+      return ASTUtility.isValue(last)
+          ? InterpreterResult.of(env, node.with(last.expr()))
+          : interpreter
+              .reduce(env, last)
+              .flatMap(
+                  result -> InterpreterResult.of(result.env(), node.with(result.node().expr())));
+    }
+
+    var first = nodes.getFirst();
+    var rest = nodes.subList(1, nodes.size());
+    return !ASTUtility.isValue(first)
+        ? interpreter
+            .reduce(env, first)
+            .flatMap(
+                result ->
+                    InterpreterResult.of(
+                        result.env(),
+                        node.with(
+                            new Seq<>(
+                                Stream.concat(Stream.of(result.node()), rest.stream()).toList()))))
+        : InterpreterResult.of(env, node.with(new Seq<>(rest)));
+  }
+\end{lstlisting}
+
+\subsection{\texttt{Optional} for monadic error handling}
+
 \section{Parsing Hygge source files with ANTLR4}
 
 As mentioned in the chapter on Architecture and Design, we have selected ANTLR4 as the parser generator of choice. For starters,
@@ -179,13 +311,73 @@ simplify the grammar file as much as possible. However, the \texttt{Hygge} gramm
 precedence into account, so it was later decided to factor out left-recursion and enforce operator precedence by separating
 production rules similar to that of \texttt{Parser.fsy} in \texttt{hyggec}.
 
+By default, \texttt{ANTLR4} generates both a lexer and a parser along with classes for implementing listeners and visitors.
+One could implement the rest of \texttt{JHygge} using the \texttt{ANTLR4} AST representation, but this AST is intended to
+be consumed or transformed by listeners and visitors, respecitively. Instead, we want a more functional model of an AST.
+In order to breach the gap between the \texttt{ANTLR4} representation and our desired \texttt{Node} and \texttt{Expr} data model,
+we decided to create a visitor, \texttt{AntlrHyggeNodeVisitor}, that provides this transformation. In the listing below, we
+see an excerpt of \texttt{AntlrHyggeNodeVisitor}, namely the \texttt{visit}, which transforms a \texttt{HyggeParser.AssertionContext}
+to a \texttt{Node} with an \texttt{Expr.Assertion}-expression, as well as the code for the \texttt{Expr.Assertion} record.
+
+\begin{lstlisting}[language=Java]
+ 
+  // From AntlrHyggeNodeVisitor.java
+  @Override
+  public Node<Object, Object> visitAssertion(HyggeParser.AssertionContext ctx) {
+    return new Node<>(
+        new Expr.Assertion<>(ctx.simpleExpr().accept(this)),
+        Position.from(ctx.start, ctx.stop),
+        null,
+        null);
+  }
+
+  // From Expr.java
+  record Ascription<E, T>(PreTypeNode tpe, Node<E, T> node) implements Expr<E, T> {
+    @Override
+    public String prettyPrint(int indentation) {
+      return "Ascription(node="
+          + node.expr().prettyPrint(indentation + 2)
+          + ", tpe="
+          + tpe.preType().toString()
+          + ")";
+    }
+  }
+
+\end{lstlisting}
+
+The creation of \texttt{Node}- and \texttt{Expr}-objects is mostly straight forward even though they are mutually recursive.
+To parse the argument for the assertion, one simply calls the \texttt{accept()}-method on the subexpression for the visitor
+context, which will recursively traverse and transform the AST to \texttt{Node}-instances. Most of the expression types
+follow a similar implementation style as the one for assertions. There are some of these tranformations that are more complicated,
+like function declarations, structs, unions, etc., but it is the same case for declaring the equivalent parser for \texttt{hyggec}
+using \texttt{FsLexYacc}.
+
+To compare the two parser implementations in a more quantitative way, the parser in \texttt{JHygge}
+takes up 159 lines (\texttt{hygge.g4}) and 440 lines (\texttt{AntlrHyggeNodeVisitor}) for a total of 599 lines, where the lexer and
+parser for \texttt{hyggec} is 100 lines (\texttt{Lexer.fsl}) and 305 lines (\texttt{Parser.fsy}) totalling 405 lines. The Java
+implementation takes up approx. $48\%$ more lines than the \texttt{F\#} version, where the \texttt{AntlrHyggeNodeVisitor} is
+the largest contributor.
+
 \section{Generating JVM bytecode with the Class-file API from Java 24}
 
 The Class-file API promises a declarative approach to reading, modifying and writing \texttt{.class}-files. The main parts of the
 API used in the implementation of the JVM backend in \texttt{JHygge} is the \texttt{ClassBuilder} and the \texttt{CodeBuilder}.
 A \texttt{ClassBuilder} is intended for modifying classes at a higher-level, such as adding attributes, constructors and methods,
 without directly handling bytecode. A \texttt{CodeBuilder} is then used to construct the sequence of bytecode instructions in
-a method or a constructor.
+a method or a constructor. Both the APIs for \texttt{ClassBuilder}s and \texttt{CodeBuilder}s make use of the builder pattern,
+however they are different in the respect that a \texttt{CodeBuilder} is immutable whereas a \texttt{ClassBuilder} isn't.
+We utilize this difference in mutability during the code generation of functions and structs.
+
+Let's walk through an example to show, how the Class-file API is used concretely in \texttt{JHygge}. The code listing below shows
+the implementation of the \texttt{generateCode()}-method for the \texttt{JVMCodeGenerator}-class. This is the minimal requirement
+for implementing the \texttt{HyggeCodeGenerator}-interface. As we see in the listing, we initially generate an empty \texttt{.class}-file,
+which is always \texttt{HyggeMain.class}, containing the \texttt{HyggeMain} class. The \texttt{ClassBuilder}-API is then used to
+generate the static \texttt{main()}-method, which the JVM will look for and use as an entry-point. To generate the code for
+the body of the \texttt{main()}-method, we use the immutable \texttt{CodeBuilder}-API. Similar to the typechecker and the interpreter,
+code generation is split across different classes and methods by grouping language features together, so the overloaded and private
+\texttt{generateCode()}-method will then dispatch to the correct code generator method depending on the top-level node in the AST.
+Note also, that the \texttt{JVMCodeGeneratorEnvironment}-class keeps a reference to the parent \texttt{ClassBuilder} for the
+\texttt{HyggeMain}-class. This will come in handy later, when generating code for functions, for example.
 
 \begin{lstlisting}[language=Java]
   // From JVMCodeGenerator.java
@@ -208,3 +400,5 @@ a method or a constructor.
             });
   }
 \end{lstlisting}
+
+Depending on the nodes in the AST, we then end up in the appropriate case. For a simple case, 
