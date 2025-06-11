@@ -39,6 +39,7 @@ public sealed interface Expr<E, T>
 
 Similar to discriminated unions in \texttt{F\#}, all cases are declared for the sealed interface \texttt{Expr}. However, unlike \texttt{F\#},
 the cases have to be defined as separate classes, records or interfaces. In the case that a specialization is a class, they have to be \texttt{final}.
+Let us examine an example of one of the mutually-recursive specializations of \texttt{Expr}, which also happens to be a \texttt{record}, namely the \texttt{Not}-expression:
 
 \begin{lstlisting}[language=Java]
   // From Expr.java, Not<E, T> is an inner class of Expr<E, T>
@@ -52,6 +53,8 @@ the cases have to be defined as separate classes, records or interfaces. In the 
 \end{lstlisting}
 
 \subsection{Switch expressions for case-by-case definitions and dispatching}
+
+In the preceding section, we mentioned pattern matching. 
 
 \begin{lstlisting}[language=Java]
   // From StandardHyggeInterpreter.java, slightly reformatted
@@ -316,7 +319,7 @@ One could implement the rest of \texttt{JHygge} using the \texttt{ANTLR4} AST re
 be consumed or transformed by listeners and visitors, respecitively. Instead, we want a more functional model of an AST.
 In order to breach the gap between the \texttt{ANTLR4} representation and our desired \texttt{Node} and \texttt{Expr} data model,
 we decided to create a visitor, \texttt{AntlrHyggeNodeVisitor}, that provides this transformation. In the listing below, we
-see an excerpt of \texttt{AntlrHyggeNodeVisitor}, namely the \texttt{visit}, which transforms a \texttt{HyggeParser.AssertionContext}
+see an excerpt of \texttt{AntlrHyggeNodeVisitor}, namely the \texttt{visitAssertion}, which transforms a \texttt{HyggeParser.AssertionContext}
 to a \texttt{Node} with an \texttt{Expr.Assertion}-expression, as well as the code for the \texttt{Expr.Assertion} record.
 
 \begin{lstlisting}[language=Java]
@@ -401,4 +404,55 @@ Note also, that the \texttt{JVMCodeGeneratorEnvironment}-class keeps a reference
   }
 \end{lstlisting}
 
-Depending on the nodes in the AST, we then end up in the appropriate case. For a simple case, 
+Depending on the nodes in the AST, we then end up in the appropriate case. For a simple case, let us consider the value
+for the basic built-in types of Hygge
+
+\begin{lstlisting}[language=Java]
+  // From JVMCodeGenerator.java
+  public CodeBuilder generateCode(
+      Node<E, T> ast, JVMCodeGeneratorEnvironment env, CodeBuilder codeBuilder) {
+    return switch (ast.expr()) {
+      case UnitVal<E, T> _ -> codeBuilder;
+      case BoolVal<E, T> v -> v.value() ? codeBuilder.iconst_1() : codeBuilder.iconst_0();
+      case IntVal<E, T> v -> codeBuilder.ldc(v.value());
+      case FloatVal<E, T> v -> codeBuilder.ldc(v.value());
+      case StringVal<E, T> v -> codeBuilder.ldc(v.value());
+      // Remaining cases ... 
+    }
+  }
+ 
+\end{lstlisting}
+
+A more intriguing example would be the code generation for \texttt{if}-expressions:
+
+\begin{lstlisting}
+// From JVMControlFlowCodeGenerator.java
+public class JVMControlFlowCodeGenerator<E extends TypingEnvironment, T extends Type> {
+
+  public CodeBuilder generateCode(
+      JVMCodeGenerator<E, T> codeGenerator,
+      JVMCodeGeneratorEnvironment env,
+      CodeBuilder codeBuilder,
+      Node<E, T> node,
+      If<E, T> ifExpr) {
+    Label labelTrue = codeBuilder.newLabel();
+    Label labelFalse = codeBuilder.newLabel();
+
+    // Generate code for the condition expression and jump to true branch
+    // if condition is not 0
+    codeBuilder = codeGenerator.generateCode(ifExpr.condition(), env, codeBuilder).ifne(labelTrue);
+
+    // Generate code for false branch
+    codeBuilder =
+        codeGenerator
+            .generateCode(ifExpr.ifFalse(), env, codeBuilder)
+            .goto_(labelFalse)
+            .labelBinding(labelTrue);
+
+    // Generate code for true branch
+    return codeGenerator.generateCode(ifExpr.ifTrue(), env, codeBuilder).labelBinding(labelFalse);
+  }
+ 
+  // Remaining methods ...
+}
+\end{lstlisting}
