@@ -52,6 +52,21 @@ Let us examine an example of one of the mutually-recursive specializations of \t
   }
 \end{lstlisting}
 
+Declaring \texttt{Not<E, T>} as a \texttt{record} has the same effect as if it had been declared as a class with private \texttt{final}
+attributes that inherit from the \texttt{java.lang.Record}, where each attribute only has a getter, but not a setter, along with implicit declarations
+of some utility methods, such as the \texttt{Object.equals()}-, \texttt{Object.hashCode()} and \texttt{Object.toString()}-method. Now, this example uses the
+\texttt{record} declaration syntax, which does all of the things mentioned above to remove boilerplate to ease the burden of the programmer.
+
+Another important thing to note about the immutability of Java records is that they are shallowly immutable, meaning that although that the record
+attributes, also called components, cannot be altered, the attributes of the record components can be mutable. That is, this \texttt{Not<E, T>} record
+has an \texttt{arg} component of type \texttt{Node<E, T>}, which is also a record, but had \texttt{arg} been declared as a class with mutable
+attributes, the programmer could still change the value of those attributes eventhough \texttt{Not<E, T>} is a record.
+
+A record is also \texttt{final} in the sense that extending record types through inheritance is prohibitted; it cannot be used as a base for
+further specialization. This makes sense in the context of sealed interfaces and pattern matching, where it would otherwise be difficult
+to perform case analysis and reason about pattern exhaustion had some variant in the discriminated union been a regular class that could
+have had an unknown number of specializations.
+
 \subsection{Switch expressions for case-by-case definitions and dispatching}
 
 In the preceding section, we mentioned pattern matching. 
@@ -99,6 +114,18 @@ In the preceding section, we mentioned pattern matching.
   }
 \end{lstlisting}
 
+However, while pattern matching with \texttt{switch}-expressions can be useful there is still limited support for it as one
+can only pattern match on reference types (classes, interfaces, enums, etc.) as of Java 24 (a proposal for use with primitives is in preview with JEP).
+That is, one cannot easily do pattern matching on the structure or value of a type. Take the list data structure as an example;
+in \texttt{F\#}, one can match not only against the type, but also the value and patterns of values, i.e. matching against \texttt{x :: xs}
+would mean that there is at least one element in the list and maybe more. These kinds of patterns are not supported in Java 24, so working with lists and
+map types are less straight-forward. Take the \texttt{Seq}-record for the sequencing expression as an example; it has a record component,
+\texttt{nodes}, which is of type \texttt{List<Node<E, T>>}. There is a case during interpretation, where the interpreter should apply
+different reductions for a sequence expression depending on the number of successive expressions, namely none, one and more than one.
+While one could use a \texttt{switch}-expression with \texttt{when}-clauses, this would create deep and nested code impairing readability
+due to indentation. Instead, it is simpler to branch on the size of the list using \texttt{if}-statements as shown in the listing below, which
+contains the \texttt{Java}-implementation of the reduction rules for the sequencing expression:
+
 \begin{lstlisting}[language=Java]
   // From StandardHyggeControlFlowReducer.java
   @Override
@@ -139,7 +166,12 @@ In the preceding section, we mentioned pattern matching.
   }
 \end{lstlisting}
 
-\subsection{\texttt{Optional} for limited monadic error handling}
+This implementation is not written in a style that is as functional as the \texttt{hyggec} counterpart and it seems that
+this is one of the compromises of a language like \texttt{Java}, which was not designed to be functional from the beginning.
+Also, notice that there is a need to create a local variable, \texttt{nodes}, to \texttt{seqExpr.nodes()} because pattern
+matching isn't supported for method arguments as it is in \texttt{F\#}.
+
+\subsection{\texttt{Optional} for monadic error handling}
 
 The Option/Maybe and Result/Either types are ways to handle errors for effectful/impure code in a way that resembles pure code.
 
