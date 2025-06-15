@@ -69,7 +69,15 @@ have had an unknown number of specializations.
 
 \subsection{Switch expressions for case-by-case definitions and dispatching}
 
-In the preceding section, we mentioned pattern matching. 
+In the preceding section, we mentioned pattern matching when discussing the use of discriminated unions. In order to handle the different variants
+of a discriminated union, pattern matching gives the programmer a way to not only branch based on the value of the active variant, but also on
+the properties and the structure of the value (in some languages). With JEP XXX, the \texttt{switch}-expression was introduced in Java, which behaves
+similarly to the \texttt{match}-expressions in languages like \texttt{F\#} and \texttt{Rust}. Unlike the existing \texttt{switch}-statement,
+the newer \texttt{switch}-expression returns a value and one can use the \texttt{when}-clause to branch to multiple different cases for the
+same variant in a discriminated union. This is useful in multiple compiler phases every time the \texttt{Expr}-type is involved. Take
+the \texttt{reduce}-method as an example; in order to reduce each variant of the \texttt{Expr}-type, the \texttt{switch}-expression is used
+to delegate the responsibility of expression reduction to the appropriate reducer as per our design proposal. An excerpt for the code
+for the \texttt{reduce}-method from \texttt{StandardHyggeInterpreter} is shown below:
 
 \begin{lstlisting}[language=Java]
   // From StandardHyggeInterpreter.java, slightly reformatted
@@ -92,30 +100,20 @@ In the preceding section, we mentioned pattern matching.
               ? InterpreterResult.of(env, node.with(b.not()))
               : reduce(env, v.arg())
                   .map(a -> new InterpreterResult<>(env, node.with(new Not<>(a.node()))));
-      case ReadInt<E, T> v -> ioReducer.reduce(this, env, node, v);
-      case ReadFloat<E, T> v -> ioReducer.reduce(this, env, node, v);
-      case Print<E, T> v -> ioReducer.reduce(this, env, node, v);
-      case PrintLn<E, T> v -> ioReducer.reduce(this, env, node, v);
-      case If<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
-      case Seq<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
-      case Type<E, T> v -> letReducer.reduce(this, env, node, v);
-      case Ascription<E, T> v -> letReducer.reduce(this, env, node, v);
-      case Assertion<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
-      case Let<E, T> v -> letReducer.reduce(this, env, node, v);
-      case Assign<E, T> v -> letReducer.reduce(this, env, node, v);
-      case While<E, T> v -> controlFlowReducer.reduce(this, env, node, v);
-      case Application<E, T> v -> functionReducer.reduce(this, env, node, v);
-      case Lambda<E, T> v -> functionReducer.reduce(this, env, node, v);
-      case StructCons<E, T> v -> structReducer.reduce(this, env, node, v);
-      case FieldSelect<E, T> v -> structReducer.reduce(this, env, node, v);
-      case UnionCons<E, T> v -> unionReducer.reduce(this, env, node, v);
-      case Match<E, T> v -> unionReducer.reduce(this, env, node, v);
+      // Remaining cases redacted for conciseness...
     };
   }
 \end{lstlisting}
 
-However, while pattern matching with \texttt{switch}-expressions can be useful there is still limited support for it as one
-can only pattern match on reference types (classes, interfaces, enums, etc.) as of Java 24 (a proposal for use with primitives is in preview with JEP).
+As we can see in the listing, the cases can group multiple variants to branch to the same single expression, as with
+the value variants \texttt{UnitVal<E, T>}, etc., which is implicitly returned/yielded. For variants like \texttt{Var<E, T>}, there are
+two different cases to handle, where the \texttt{when}-clause is used to disguish between these cases without having to resort to
+additional constructs for control flow creating unwanted nesting. One might point out, that this essentially a functional programming
+version of the Visitor pattern known from Object-oriented design. So, this is a case, where both FP and OOP style want to solve the
+same problem, but do it in different yet still somewhat similar ways.
+
+However, while pattern matching with \texttt{switch}-expressions can be useful, there is still limited support for it as one
+can only pattern match on reference types (classes, interfaces, enums, etc.) as of Java 24 (a proposal for use with primitives is in preview with JEP XXX).
 That is, one cannot easily do pattern matching on the structure or value of a type. Take the list data structure as an example;
 in \texttt{F\#}, one can match not only against the type, but also the value and patterns of values, i.e. matching against \texttt{x :: xs}
 would mean that there is at least one element in the list and maybe more. These kinds of patterns are not supported in Java 24, so working with lists and
@@ -174,6 +172,52 @@ matching isn't supported for method arguments as it is in \texttt{F\#}.
 \subsection{\texttt{Optional} for monadic error handling}
 
 The Option/Maybe and Result/Either types are ways to handle errors for effectful/impure code in a way that resembles pure code.
+This is in contrast to exceptions, which is the de facto default approach to error handling in \texttt{Java}. The benefit
+of using monadic error handling is that it becomes immediately obvious that a function can fail from its type signature.
+Furthermore, the type also communicates the kind of errors that can occur. The Option/Maybe type indicates that the function
+may produce something or nothing, and in the case of nothing, there is no information about why. This is useful in cases,
+where when a failure occurs, the programmer should not be concerned about why it failed. On the other hand, the Result/Either
+type is used when the programmer is interested in the cause of failure and want to act on it.
+
+In \texttt{Java}, there is the \texttt{java.lang.Optional} type, which is an implementation of the Option/Maybe monad. It
+supports the $>>=$ (pronounced: ``bind'') and \texttt{return} operations in the form of the \texttt{.flatMap()}-method
+and \texttt{Optional.of()}, respectively. In \texttt{JHygge}, this has been used for the implementation of the interpreter
+reduction rules based on the algorithm from \texttt{hyggec} as reduction is applied until it is impossible to reduce further.
+At that point, the last successful reduced \texttt{Node} is returned. In the listing below, we show an excerpt from
+\texttt{StandardStructReducer.java}, which showcases the use of \texttt{Optional} in the \texttt{reduce()}-method:
+
+\begin{lstlisting}
+// From StandardStructReducer.java, all other methods have been redacted ...
+public class StandardStructReducer<E, T> implements StructReducer<E, T> {
+
+  @Override
+  public Optional<InterpreterResult<E, T>> reduce(
+      HyggeInterpreter<E, T> interpreter,
+      RuntimeEnvironment<E, T> env,
+      Node<E, T> node,
+      FieldSelect<E, T> fieldSelectExpr) {
+
+    if (fieldSelectExpr.target().expr() instanceof Expr.Pointer<E, T>(int address))
+      return FunctionalUtilities.tryFind(env.ptrInfo(), address)
+          .flatMap(
+              fields -> {
+                var offset = fields.indexOf(fieldSelectExpr.field());
+                return InterpreterResult.of(env, env.heap().get(address + offset));
+              });
+
+    if (!ASTUtility.isValue(fieldSelectExpr.target()))
+      return interpreter
+          .reduce(env, fieldSelectExpr.target())
+          .map(result -> result.with(new FieldSelect<>(result.node(), fieldSelectExpr.field())));
+
+    return Optional.empty();
+  }
+
+}
+\end{lstlisting}
+
+As shown in the listing above, the both the \texttt{.flatMap()} and \texttt{.map()} operations as well as \texttt{Optional.of()}
+indirectly (this is hidden in \texttt{InterpreterResult.of()} and \texttt{FunctionalUtilities.tryFind()}).
 
 \section{Parsing Hygge source files with ANTLR4}
 
