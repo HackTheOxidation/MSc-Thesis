@@ -251,174 +251,7 @@ handling.
 
 As mentioned in the chapter on Architecture and Design, we have selected ANTLR4 as the parser generator of choice. For starters,
 we have translated the \texttt{FsLexYacc} lexer and parser files, \texttt{Lexer.fsl} and \texttt{Parser.fsy}, to ANTLR4
-\texttt{.g4}-format. In figure \ref{fig:hygge_grammar_antlr4}, we show the complete \texttt{.g4} grammar file for the final version of \texttt{JHygge}.
-
-\begin{figure}[H]
-\centering  
-\begin{lstlisting}
-grammar Hygge;
-
-@header {
-package io.github.hacktheoxidation.hygge;
-}
-
-prog: expression EOF;
-
-expression: TYPE ID EQUAL pretype SEQ expression                                        # TypeAlias
-    | LET (MUTABLE)? variable (ASCRIPTION pretype)? EQUAL simpleExpr SEQ expression     # LetDeclare
-    | FUN variable parenArgTypesSeq ASCRIPTION pretype EQUAL simpleExpr SEQ expression  # FunDeclare
-    | curlyExpr expression                                                              # Curly
-    | sequenceExpr                                                                      # Seq
-    ;
-
-curlyExpr: LCURLY expression RCURLY                                       # Scope
-    ;
-
-sequenceExpr: simpleExpr SEQ expression                                   # Sequence
-    | simpleExpr                                                          # Simple
-    ;
-
-simpleExpr: ifExpr                                                        # If
-    | curlyExpr                                                           # Brackets
-    | WHILE simpleExpr DO simpleExpr                                      # While
-    | primaryExpr LARROW simpleExpr                                       # Assignment
-    | FUN parenArgTypesSeq RARROW simpleExpr                              # Lambda
-    | MATCH simpleExpr WITH LCURLY matchCases RCURLY                      # Match
-    ;
-
-ifExpr: IF simpleExpr THEN simpleExpr ELSE simpleExpr                     # IfThenElse
-    | orExpr                                                              # Or
-    ;
-
-orExpr: orExpr OR andExpr                                                 # LogicalOr
-    | andExpr                                                             # And
-    ;
-
-andExpr: andExpr AND relExpr                                              # LogicalAnd
-    | relExpr                                                             # Rel
-    ;
-
-relExpr: addExpr EQUAL addExpr                                            # Equality
-    | addExpr LESS addExpr                                                # RelLess
-    | addExpr                                                             # Add
-    ;
-
-addExpr: addExpr ADD multExpr                                             # ArithAdd
-    | multExpr                                                            # Mult
-    ;
-
-multExpr: multExpr MUL unaryExpr                                          # ArithMul
-    | unaryExpr                                                           # Unary
-    ;
-
-unaryExpr: NOT unaryExpr                                                  # LogicalNot
-    | READINT ('(' ')' | '()')                                            # ReadInt
-    | READFLOAT ('(' ')' | '()')                                          # ReadFloat
-    | PRINT '(' simpleExpr ')'                                            # Print
-    | PRINTLN '(' simpleExpr ')'                                          # PrintLine
-    | ASSERT '(' simpleExpr ')'                                           # Assertion
-    | ascriptionExpr                                                      # Ascription
-    | primaryExpr parenExprCommaSeq                                       # Application
-    ;
-
-ascriptionExpr: primaryExpr ASCRIPTION pretype                            # TypeAscription
-    | primaryExpr                                                         # Primary
-    ;
-
-primaryExpr: LPAREN simpleExpr RPAREN                                     # Parens
-    | value                                                               # Val
-    | variable                                                            # Var
-    | STRUCT LCURLY structFieldInitSeq RCURLY                             # StructCons
-    | primaryExpr DOT field                                               # FieldSelect
-    | label LCURLY expression RCURLY                                      # UnionCons
-    ;
-
-
-value : INT | FLOAT | BOOL | STRING | UNIT ;
-variable : ID ;
-field : ID ;
-label: ID ;
-
-pretype : parenTypesSeq RARROW pretype
-    | STRUCT LCURLY structFieldTypeSeq RCURLY
-    | UNION LCURLY unionLabelTypeSeq RCURLY
-    | ID
-    ;
-
-
-parenArgTypesSeq: UNIT
-    | LPAREN (variable ASCRIPTION pretype (COMMA variable ASCRIPTION pretype)*) RPAREN
-    ;
-
-parenTypesSeq: UNIT
-    | LPAREN (pretype (COMMA pretype)*) RPAREN
-    ;
-
-parenExprCommaSeq: UNIT
-    | LPAREN (simpleExpr (COMMA simpleExpr)*) RPAREN
-    ;
-
-structFieldInitSeq: field EQUAL simpleExpr (SEQ field EQUAL simpleExpr)*;
-
-structFieldTypeSeq: field ASCRIPTION pretype (SEQ field ASCRIPTION pretype)*;
-
-unionLabelTypeSeq: label ASCRIPTION pretype (SEQ label ASCRIPTION pretype)*;
-
-matchCases: label LCURLY variable RCURLY RARROW simpleExpr (SEQ label LCURLY variable RCURLY RARROW simpleExpr)*;
-
-// Reserved keywords and operators
-ASSERT : 'assert' ;
-READINT : 'readInt' ;
-READFLOAT : 'readFloat' ;
-PRINT : 'print' ;
-PRINTLN : 'println';
-NOT : 'not' ;
-ADD : '+' ;
-SUB : '-' ;
-MUL : '*' ;
-LESS : '<' ;
-AND : 'and' ;
-OR : 'or' ;
-IF : 'if' ;
-THEN : 'then' ;
-ELSE : 'else' ;
-LET : 'let' ;
-TYPE : 'type' ;
-EQUAL : '=' ;
-LPAREN : '(' ;
-RPAREN : ')' ;
-LCURLY : '{' ;
-RCURLY : '}' ;
-ASCRIPTION : ':' ;
-SEQ : ';' ;
-COMMA : ',' ;
-DOT : '.' ;
-LARROW : '<-' ;
-RARROW : '->' ;
-MUTABLE : 'mutable' ;
-WHILE : 'while' ;
-DO : 'do' ;
-FUN : 'fun' ;
-STRUCT : 'struct' ;
-UNION : 'union' ;
-MATCH : 'match' ;
-WITH : 'with' ;
-
-// Values and Names
-INT : [0-9]+ ;
-FLOAT : INT '.' INT ('f' | 'F') ;
-BOOL : 'true' | 'false' ;
-STRING : '"' (~["\\\r\n] | EscapeSequence)* '"' ;
-UNIT : '()' ;
-ID: [a-zA-Z_][a-zA-Z_0-9]* ;
-WS: [ \t\n\r\f]+ -> skip ;
-LINE_COMMENT: '//' ~[\r\n]* -> skip ;
-
-fragment EscapeSequence: '\\' [btnfr"'\\] ; 
-\end{lstlisting}
-\caption{Complete ANTLR4 \texttt{.g4} grammar specification for the Hygge language in the final version of \texttt{JHygge}.}
-\label{fig:hygge_grammar_antlr4}
-\end{figure}
+\texttt{.g4}-format. In appendix \ref{appendix:hygge_grammar}, we show the complete \texttt{.g4} grammar file for the final version of \texttt{JHygge}.
 
 Initially, this grammar file was syntactically more similar to the E-BNF for the \texttt{Hygge} specification as an attempt to
 simplify the grammar file as much as possible. However, the \texttt{Hygge} grammar specification does not take operator
@@ -490,7 +323,7 @@ We utilize this difference in mutability during the code generation of functions
 
 Let's walk through an example to show, how the Class-file API is used concretely in \texttt{JHygge}. The code listing  shows
 the implementation of the \texttt{generateCode()}-method for the \texttt{JVMCodeGenerator}-class. This is the minimal requirement
-for implementing the \texttt{HyggeCodeGenerator}-interface. As we see in the listing, we initially generate an empty \texttt{.class}-file,
+for implementing the \texttt{HyggeCodeGenerator}-interface. As we see in figure \ref{fig:codegen_main}, we initially generate an empty \texttt{.class}-file,
 which is always \texttt{HyggeMain.class}, containing the \texttt{HyggeMain} class. The \texttt{ClassBuilder}-API is then used to
 generate the static \texttt{main()}-method, which the JVM will look for and use as an entry-point. To generate the code for
 the body of the \texttt{main()}-method, we use the immutable \texttt{CodeBuilder}-API. Similar to the typechecker and the interpreter,
@@ -522,8 +355,8 @@ Note also, that the \texttt{JVMCodeGeneratorEnvironment}-class keeps a reference
             });
   }
 \end{lstlisting}
-\caption{}
-\label{}
+\caption{Entry point for the JVM code generator backend}
+\label{fig:codegen_main}
 \end{figure}
 
 Depending on the nodes in the AST, we then end up in the appropriate case. For a simple case, let us consider the case
@@ -644,37 +477,6 @@ For the final example, we showcase the implementation of code generation for Hyg
 \begin{figure}[H]
   \centering
   \begin{lstlisting}[language=Java]
-    
-  private CodeBuilder generateConstructorMethodBody(
-      CodeBuilder constructorBuilder,
-      JVMCodeGeneratorEnvironment env,
-      StructCons<E, T> structConsExpr,
-      String structClassName) {
-    constructorBuilder =
-        constructorBuilder
-            .aload(0)
-            .invokespecial(
-                ClassDesc.ofInternalName("java/lang/Object"),
-                "<init>",
-                MethodTypeDesc.ofDescriptor("()V"));
-
-    var i = new AtomicInteger(1);
-    for (var field : structConsExpr.fields().entrySet()) {
-      var fieldType = field.getValue().type();
-      var fieldEnv = field.getValue().env();
-      var slot = i.getAndIncrement();
-      constructorBuilder =
-          loadValueOfType(constructorBuilder.aload(0), fieldEnv, fieldType, slot)
-              .putfield(
-                  ClassDesc.of(structClassName),
-                  field.getKey(),
-                  ClassDesc.ofDescriptor(
-                      JVMCodeGenerationUtility.makeDescriptor(field.getValue().type(), env)));
-    }
-
-    return constructorBuilder.return_();
-  }
-
   public CodeBuilder generateCode(
       JVMCodeGenerator<E, T> codeGenerator,
       JVMCodeGeneratorEnvironment env,
@@ -731,6 +533,45 @@ For the final example, we showcase the implementation of code generation for Hyg
     return codeBuilder.invokespecial(structClassDescriptor, "<init>", constructorDescriptor);
   }
   \end{lstlisting}
-  \caption{Excerpt of the implementation of code generation for Hygge \texttt{structs}s from \texttt{JVMStructCodeGenerator.java}.}
+  \caption{Excerpt of the implementation of code generation for Hygge \texttt{struct}s from \texttt{JVMStructCodeGenerator.java}.}
   \label{fig:jvm_struct_builder}
+\end{figure}
+
+In figure \ref{fig:jvm_constructor_builder}, we show...
+
+\begin{figure}
+    \centering
+    \begin{lstlisting}[language=Java]
+  private CodeBuilder generateConstructorMethodBody(
+      CodeBuilder constructorBuilder,
+      JVMCodeGeneratorEnvironment env,
+      StructCons<E, T> structConsExpr,
+      String structClassName) {
+    constructorBuilder =
+        constructorBuilder
+            .aload(0)
+            .invokespecial(
+                ClassDesc.ofInternalName("java/lang/Object"),
+                "<init>",
+                MethodTypeDesc.ofDescriptor("()V"));
+
+    var i = new AtomicInteger(1);
+    for (var field : structConsExpr.fields().entrySet()) {
+      var fieldType = field.getValue().type();
+      var fieldEnv = field.getValue().env();
+      var slot = i.getAndIncrement();
+      constructorBuilder =
+          loadValueOfType(constructorBuilder.aload(0), fieldEnv, fieldType, slot)
+              .putfield(
+                  ClassDesc.of(structClassName),
+                  field.getKey(),
+                  ClassDesc.ofDescriptor(
+                      JVMCodeGenerationUtility.makeDescriptor(field.getValue().type(), env)));
+    }
+
+    return constructorBuilder.return_();
+  }
+    \end{lstlisting}
+    \caption{Implementation of the helper function for generating the code for a constructor body.}
+    \label{fig:jvm_constructor_builder}
 \end{figure}

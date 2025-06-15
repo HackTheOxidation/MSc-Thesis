@@ -1,1 +1,452 @@
-\chapter{Title}
+\chapter{Appendix A - ANTLR4 grammar for Hygge} \label{appendix:hygge_grammar}
+
+\begin{lstlisting}
+grammar Hygge;
+
+@header {
+package io.github.hacktheoxidation.hygge;
+}
+
+prog: expression EOF;
+
+expression: TYPE ID EQUAL pretype SEQ expression                                        # TypeAlias
+    | LET (MUTABLE)? variable (ASCRIPTION pretype)? EQUAL simpleExpr SEQ expression     # LetDeclare
+    | FUN variable parenArgTypesSeq ASCRIPTION pretype EQUAL simpleExpr SEQ expression  # FunDeclare
+    | curlyExpr expression                                                              # Curly
+    | sequenceExpr                                                                      # Seq
+    ;
+
+curlyExpr: LCURLY expression RCURLY                                       # Scope
+    ;
+
+sequenceExpr: simpleExpr SEQ expression                                   # Sequence
+    | simpleExpr                                                          # Simple
+    ;
+
+simpleExpr: ifExpr                                                        # If
+    | curlyExpr                                                           # Brackets
+    | WHILE simpleExpr DO simpleExpr                                      # While
+    | primaryExpr LARROW simpleExpr                                       # Assignment
+    | FUN parenArgTypesSeq RARROW simpleExpr                              # Lambda
+    | MATCH simpleExpr WITH LCURLY matchCases RCURLY                      # Match
+    ;
+
+ifExpr: IF simpleExpr THEN simpleExpr ELSE simpleExpr                     # IfThenElse
+    | orExpr                                                              # Or
+    ;
+
+orExpr: orExpr OR andExpr                                                 # LogicalOr
+    | andExpr                                                             # And
+    ;
+
+andExpr: andExpr AND relExpr                                              # LogicalAnd
+    | relExpr                                                             # Rel
+    ;
+
+relExpr: addExpr EQUAL addExpr                                            # Equality
+    | addExpr LESS addExpr                                                # RelLess
+    | addExpr                                                             # Add
+    ;
+
+addExpr: addExpr ADD multExpr                                             # ArithAdd
+    | multExpr                                                            # Mult
+    ;
+
+multExpr: multExpr MUL unaryExpr                                          # ArithMul
+    | unaryExpr                                                           # Unary
+    ;
+
+unaryExpr: NOT unaryExpr                                                  # LogicalNot
+    | READINT ('(' ')' | '()')                                            # ReadInt
+    | READFLOAT ('(' ')' | '()')                                          # ReadFloat
+    | PRINT '(' simpleExpr ')'                                            # Print
+    | PRINTLN '(' simpleExpr ')'                                          # PrintLine
+    | ASSERT '(' simpleExpr ')'                                           # Assertion
+    | ascriptionExpr                                                      # Ascription
+    | primaryExpr parenExprCommaSeq                                       # Application
+    ;
+
+ascriptionExpr: primaryExpr ASCRIPTION pretype                            # TypeAscription
+    | primaryExpr                                                         # Primary
+    ;
+
+primaryExpr: LPAREN simpleExpr RPAREN                                     # Parens
+    | value                                                               # Val
+    | variable                                                            # Var
+    | STRUCT LCURLY structFieldInitSeq RCURLY                             # StructCons
+    | primaryExpr DOT field                                               # FieldSelect
+    | label LCURLY expression RCURLY                                      # UnionCons
+    ;
+
+
+value : INT | FLOAT | BOOL | STRING | UNIT ;
+variable : ID ;
+field : ID ;
+label: ID ;
+
+pretype : parenTypesSeq RARROW pretype
+    | STRUCT LCURLY structFieldTypeSeq RCURLY
+    | UNION LCURLY unionLabelTypeSeq RCURLY
+    | ID
+    ;
+
+
+parenArgTypesSeq: UNIT
+    | LPAREN (variable ASCRIPTION pretype (COMMA variable ASCRIPTION pretype)*) RPAREN
+    ;
+
+parenTypesSeq: UNIT
+    | LPAREN (pretype (COMMA pretype)*) RPAREN
+    ;
+
+parenExprCommaSeq: UNIT
+    | LPAREN (simpleExpr (COMMA simpleExpr)*) RPAREN
+    ;
+
+structFieldInitSeq: field EQUAL simpleExpr (SEQ field EQUAL simpleExpr)*;
+
+structFieldTypeSeq: field ASCRIPTION pretype (SEQ field ASCRIPTION pretype)*;
+
+unionLabelTypeSeq: label ASCRIPTION pretype (SEQ label ASCRIPTION pretype)*;
+
+matchCases: label LCURLY variable RCURLY RARROW simpleExpr (SEQ label LCURLY variable RCURLY RARROW simpleExpr)*;
+
+// Reserved keywords and operators
+ASSERT : 'assert' ;
+READINT : 'readInt' ;
+READFLOAT : 'readFloat' ;
+PRINT : 'print' ;
+PRINTLN : 'println';
+NOT : 'not' ;
+ADD : '+' ;
+SUB : '-' ;
+MUL : '*' ;
+LESS : '<' ;
+AND : 'and' ;
+OR : 'or' ;
+IF : 'if' ;
+THEN : 'then' ;
+ELSE : 'else' ;
+LET : 'let' ;
+TYPE : 'type' ;
+EQUAL : '=' ;
+LPAREN : '(' ;
+RPAREN : ')' ;
+LCURLY : '{' ;
+RCURLY : '}' ;
+ASCRIPTION : ':' ;
+SEQ : ';' ;
+COMMA : ',' ;
+DOT : '.' ;
+LARROW : '<-' ;
+RARROW : '->' ;
+MUTABLE : 'mutable' ;
+WHILE : 'while' ;
+DO : 'do' ;
+FUN : 'fun' ;
+STRUCT : 'struct' ;
+UNION : 'union' ;
+MATCH : 'match' ;
+WITH : 'with' ;
+
+// Values and Names
+INT : [0-9]+ ;
+FLOAT : INT '.' INT ('f' | 'F') ;
+BOOL : 'true' | 'false' ;
+STRING : '"' (~["\\\r\n] | EscapeSequence)* '"' ;
+UNIT : '()' ;
+ID: [a-zA-Z_][a-zA-Z_0-9]* ;
+WS: [ \t\n\r\f]+ -> skip ;
+LINE_COMMENT: '//' ~[\r\n]* -> skip ;
+
+fragment EscapeSequence: '\\' [btnfr"'\\] ; 
+\end{lstlisting}
+
+\chapter{Appendix B - Proposal for an implementation of the Result monad in Java 24} \label{appendix:result_java}
+
+\begin{lstlisting}[language=Java]
+package io.github.hacktheoxidation.util;
+
+import java.util.function.Function;
+
+/**
+ * An implementation of the Result/Either monad in Java
+ * @param <ValueType> The type of the Ok type constructor
+ * @param <ErrorType> The type of the Error type constructor
+ */
+public sealed interface Result<ValueType, ErrorType> permits Result.Ok, Result.Error {
+
+    /**
+     * The functor map operation for the Result functor
+     * @param function The mapping function which acts on the Ok type constructor
+     * @return A new result instance
+     * @param <NewValueType> The new polymorphic type for the Ok type constructor
+     */
+    <NewValueType> Result<NewValueType, ErrorType> map(Function<ValueType, NewValueType> function);
+
+    /**
+     * The monadic 'bind' (flatMap) operation for the Result monad
+     * @param function A function from the Ok constructors value type to a new Result
+     * @return A new result instance with the mapping applied
+     * @param <NewValueType> The new polymorphic type for the Ok type constructor
+     */
+    <NewValueType> Result<NewValueType, ErrorType> flatMap(Function<ValueType, Result<NewValueType, ErrorType>> function);
+
+    /**
+     * The applicative functor 'liftA2' operation for the Result applicative
+     * @param applicative A result applicative whose polymorphic type is a mapping function
+     * @return A new result instance with the mapping applied
+     * @param <NewValueType> The new polymorphic type for the Ok type constructor
+     */
+    <NewValueType> Result<NewValueType, ErrorType> lift(Result<Function<ValueType, NewValueType>, ErrorType> applicative);
+
+    /**
+     * Check if the result is an Ok instance
+     * @return whether this is an Ok instance
+     */
+    default boolean isOk() {
+        return this instanceof Result.Ok<?, ?>;
+    }
+
+    /**
+     * Check if the result is an Error instance
+     * @return wheterh this is an Error instance
+     */
+    default boolean isError() {
+        return this instanceof Result.Error<?, ?>;
+    }
+
+    /**
+     * Apply a procedure if this is an instance of the Ok constructor.
+     * @param procedure A procedure/method that acts on the value of the Ok constructor
+     */
+    default void ifPresent(Function<ValueType, Void> procedure) {
+        if (this instanceof Ok<ValueType, ErrorType>(ValueType value)) {
+            procedure.apply(value);
+        }
+    }
+
+    /**
+     * The Ok type constructor for the Result monad signaling that a computation succeeded
+     * @param value The value of the successful computation
+     * @param <ValueType> The type of the value in the Ok constructor
+     * @param <ErrorType> The type of the error in the Error constructor
+     */
+    record Ok<ValueType, ErrorType>(ValueType value) implements Result<ValueType, ErrorType> {
+        @Override
+        public <NewValueType> Result<NewValueType, ErrorType> map(Function<ValueType, NewValueType> function) {
+            return new Ok<>(function.apply(value));
+        }
+
+        @Override
+        public <NewValueType> Result<NewValueType, ErrorType> flatMap(Function<ValueType, Result<NewValueType, ErrorType>> function) {
+            return function.apply(value);
+        }
+
+        @Override
+        public <NewValueType> Result<NewValueType, ErrorType> lift(Result<Function<ValueType, NewValueType>, ErrorType> applicative) {
+            return switch (applicative) {
+                case Result.Ok<Function<ValueType, NewValueType>, ErrorType> ok -> new Ok<>(ok.value.apply(value()));
+                case Result.Error<?, ErrorType> error -> new Error<>(error.error());
+            };
+        }
+    }
+
+    /**
+     * The Error type constructor for the Result monad signaling that a computation failed
+     * @param error The error of the failed computation
+     * @param <ValueType> The type of the value in the Ok constructor
+     * @param <ErrorType> The type of the error in the Error constructor
+     */
+    record Error<ValueType, ErrorType>(ErrorType error) implements Result<ValueType, ErrorType> {
+        @Override
+        public <NewValueType> Result<NewValueType, ErrorType> map(Function<ValueType, NewValueType> function) {
+            return new Error<>(error);
+        }
+
+        @Override
+        public <NewValueType> Result<NewValueType, ErrorType> flatMap(Function<ValueType, Result<NewValueType, ErrorType>> function) {
+            return new Error<>(error);
+        }
+
+        @Override
+        public <NewValueType> Result<NewValueType, ErrorType> lift(Result<Function<ValueType, NewValueType>, ErrorType> applicative) {
+            return new Error<>(error);
+        }
+    }
+}
+    
+\end{lstlisting}
+
+\chapter{Appendix C - Additional functional utilities missing from Java 24} \label{appendix:functionalutilities}
+
+\begin{lstlisting}[language=Java]
+package io.github.hacktheoxidation.util;
+
+import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+/**
+ * A collection of functions and utilities for Functional Programming (FP) in Java. Mostly for
+ * manipulating collections in a more functional and immutable manor.
+ */
+public class FunctionalUtilities {
+  private FunctionalUtilities() {}
+
+  /**
+   * Computes the union of two sets without modifying them.
+   *
+   * @param s1 The left-hand set operand
+   * @param s2 The right-hand set operand
+   * @return The union of 's1' and 's2'
+   * @param <T> The type of elements in the sets
+   */
+  public static <T> Set<T> union(Set<T> s1, Set<T> s2) {
+    return Stream.concat(s1.stream(), s2.stream()).collect(Collectors.toSet());
+  }
+
+  /**
+   * Computes the union of multiple sets without modifying them.
+   *
+   * @param s1 The initial set operand
+   * @param sets A variadic number of sets
+   * @return The union of all set arguments
+   * @param <T> The type of elements in the sets
+   */
+  @SafeVarargs
+  public static <T> Set<T> union(Set<T> s1, Set<T>... sets) {
+    return Arrays.stream(sets).reduce(s1, FunctionalUtilities::union);
+  }
+
+  /**
+   * Computes the intersection of two sets without modifying them.
+   *
+   * @param s1 The left-hand set operand
+   * @param s2 The right-hand set operand
+   * @return The intersection of 's1' and 's2'
+   * @param <T> The type of elements in the sets
+   */
+  public static <T> Set<T> intersection(Set<T> s1, Set<T> s2) {
+    return s1.stream().filter(s2::contains).collect(Collectors.toSet());
+  }
+
+  /**
+   * Computes the difference of two sets without modifying them.
+   *
+   * @param s1 The left-hand set operand
+   * @param s2 The right-hand set operand
+   * @return The difference of 's1' and 's2'
+   * @param <T> The type of elements in the sets
+   */
+  public static <T> Set<T> difference(Set<T> s1, Set<T> s2) {
+    return s1.stream().filter(val -> !s2.contains(val)).collect(Collectors.toSet());
+  }
+
+  /**
+   * Tries to look up a key in a map
+   *
+   * @param m The map to search
+   * @param key The key to look up
+   * @return An optional with the corresponding value
+   * @param <K> The type of the key in the map
+   * @param <V> The type of the value in the map
+   */
+  public static <K, V> Optional<V> tryFind(Map<K, V> m, K key) {
+    return m.containsKey(key) ? Optional.of(m.get(key)) : Optional.empty();
+  }
+
+  /**
+   * Tries to look up a value in a set
+   *
+   * @param s The set to search
+   * @param value The value to look up
+   * @return An optional with the corresponding value
+   * @param <V> The type of the value in the set
+   */
+  public static <V> Optional<V> tryFind(Set<V> s, V value) {
+    return s.contains(value) ? Optional.of(value) : Optional.empty();
+  }
+
+  /**
+   * Adds an element to a set
+   *
+   * @param s the set to add an element to
+   * @param value the element to add
+   * @return a new set with the element added
+   * @param <V> the type of elements in the set
+   */
+  public static <V> Set<V> add(Set<V> s, V value) {
+    var newSet = new HashSet<>(s);
+    newSet.add(value);
+    return newSet;
+  }
+
+  /**
+   * Removes an element for a set
+   *
+   * @param s the set to remove an element from
+   * @param value the element to remove
+   * @return a new set with the element removed
+   * @param <V> the type of elements in the set
+   */
+  public static <V> Set<V> remove(Set<V> s, V value) {
+    var newSet = new HashSet<>(s);
+    newSet.remove(value);
+    return newSet;
+  }
+
+  /**
+   * Adds an element to the head of a list
+   *
+   * @param l the list to add an element to
+   * @param value the element to add
+   * @return a new list with an element added to the head of the list
+   * @param <V> the type of elements in the list
+   */
+  public static <V> List<V> add(List<V> l, V value) {
+    return Stream.concat(Stream.of(value), l.stream()).toList();
+  }
+
+  public static <K, V> Map<K, V> put(Map<K, V> m, K key, V value) {
+    var newMap = new HashMap<>(m);
+    newMap.put(key, value);
+    return newMap;
+  }
+
+  public static <K, V> Map<K, V> remove(Map<K, V> m, K key) {
+    var newMap = new HashMap<>(m);
+    newMap.remove(key);
+    return newMap;
+  }
+
+  public static <A, B> Stream<SimpleEntry<A, B>> zip(List<A> as, List<B> bs) {
+    return IntStream.range(0, Math.min(as.size(), bs.size()))
+        .mapToObj(i -> new SimpleEntry<>(as.get(i), bs.get(i)));
+  }
+
+  public record Triple<A, B, C>(A first, B second, C third) {}
+
+  public static <A, B, C> Stream<Triple<A, B, C>> zip(List<A> as, List<B> bs, List<C> cs) {
+    return IntStream.range(0, Math.min(as.size(), Math.min(bs.size(), cs.size())))
+        .mapToObj(i -> new Triple<>(as.get(i), bs.get(i), cs.get(i)));
+  }
+
+  public static <T> boolean hasDuplicates(Collection<T> collection) {
+    return collection.stream().anyMatch(arg -> Collections.frequency(collection, arg) > 1);
+  }
+
+  public static <A, B> A foldRight(
+      A initial, BiFunction<A, B, A> folder, Collection<B> collection) {
+    var result = initial;
+    for (var element : collection) {
+      result = folder.apply(result, element);
+    }
+    return result;
+  }
+}
+
+\end{lstlisting}
