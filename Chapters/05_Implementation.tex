@@ -186,7 +186,7 @@ reduction rules based on the algorithm from \texttt{hyggec} as reduction is appl
 At that point, the last successful reduced \texttt{Node} is returned. In the listing below, we show an excerpt from
 \texttt{StandardStructReducer.java}, which showcases the use of \texttt{Optional} in the \texttt{reduce()}-method:
 
-\begin{lstlisting}
+\begin{lstlisting}[language=Java]
 // From StandardStructReducer.java, all other methods have been redacted ...
 public class StandardStructReducer<E, T> implements StructReducer<E, T> {
 
@@ -503,7 +503,7 @@ for the basic built-in types of Hygge
 
 A more intriguing example would be the code generation for \texttt{if}-expressions:
 
-\begin{lstlisting}
+\begin{lstlisting}[language=Java]
 // From JVMControlFlowCodeGenerator.java
 public class JVMControlFlowCodeGenerator<E extends TypingEnvironment, T extends Type> {
 
