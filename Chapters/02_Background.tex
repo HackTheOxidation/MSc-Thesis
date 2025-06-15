@@ -55,7 +55,8 @@ structures (records), pattern matching and discriminated unions in the form of s
 interfaces. We will briefly review a select number of these newer functional features
 and compare them to other functional languages.
 
-The most relevant features from newer versions of Java, described in their respective ``Java Enhancement Proposals'' (JEP), which will be used in this thesis, are as follows:
+The most relevant features from newer versions of Java, described in their respective ``Java Enhancement Proposals'' (JEP),
+which will be investigated throughout this thesis, are as follows:
 
 \begin{itemize}
     \item JEP 488 (JDK 24): Primitive Types in Patterns, instanceof, and switch
@@ -94,6 +95,8 @@ The bytecode in a ``class''-file is also grouped, first by class then by method,
 To illustrate this, let's go through a small example. In the code snippet below, we show a simple \texttt{Java} program containing a static
 \texttt{main()}-method, an instance method and a constructor:
 
+\begin{figure}[H]
+\centering 
 \begin{lstlisting}[language=Java]
 class Main {
     private int foo;
@@ -118,11 +121,16 @@ class Main {
     }
 }
 \end{lstlisting}
+\caption{}
+\label{}
+\end{figure}
 
 What the code above does is not important. If one then compiles the code with \texttt{javac} (OpenJDK 24.0.0) and then
 dissassembles the resulting \texttt{.class}-file with \texttt{javap}, one obtains (depending on JDK release and compiler flags)
 the following JVM bytecode in human-readable form:
 
+\begin{figure}[H]
+\centering 
 \begin{lstlisting}
 class Main {
   private int foo;
@@ -169,6 +177,9 @@ class Main {
 
 }
 \end{lstlisting}
+\caption{}
+\label{}
+\end{figure}
 
 Note, that in this example, the run-time constant pool for \texttt{Main} has been removed for the sake of brevity and readability.
 Comparing this bytecode with its equivalent \texttt{Java} source program, they are quite similar in terms of structure.

@@ -32,9 +32,19 @@ fact that it is not implemented as a discriminated union (sealed interface) and 
 Another very useful and common monad, which is also used in \texttt{hyggec}, is the \texttt{Result}-monad. This is useful for monadic
 and explicit error handling in functional languages, but it is simply lacking in \texttt{Java} 24. Instead, \texttt{Java} relies on
 exceptions as its primary way of handling errors. As such, the \texttt{JHygge} implementation relies on exceptions for error handling.
+When comparing the implementation of \texttt{JHygge} to that of \texttt{hyggec}, \texttt{hyggec} does make reasonable use of the \texttt{Result}
+monad as it is properly supported in \texttt{F\#}. This would have made implementing the typechecking easier. Instead, due to the lack
+of \texttt{Result}, we chose to use exceptions instead for the typechecking and (JVM) code-generation phases. Exceptions do produce a
+side-effect, which isn't desirable, but it does make the code simpler to understand for students who primarily have experience using
+\texttt{Java} in the more common OOP style. As a final note on the \texttt{Result}, while it is not the goal of this thesis to attempt
+to ``complete'' support for functional programming features in \texttt{Java}, it is baffling to see that this type has not been implemented
+in \texttt{Java} when \texttt{Optional} has. As a minor experiment, a proposed implementation for discriminated union-based \texttt{Result}
+monad has been made and it can be found in \texttt{Result.java} XXX.
 
 Furthermore, \texttt{Java} also lacks support for tuples as a built-in data type; this means that one is forced to create small ad-hoc
-classes for grouping related data in situations where one does not care about naming a new type.
+classes for grouping related data in situations where one does not care about naming a new type. One example of this is \texttt{InterpreterResult},
+which only serves the purpose of storing a \texttt{RuntimeEnvironment} and a \texttt{Node}. The same goes for \texttt{LeftRightReductionResult}.
+Both of these are single use, single purpose construction whose names are not important.
 
 \section{The Class-file API in action}
 
@@ -43,3 +53,5 @@ this section will be a lot more positive as we found that the Java 24 Class-file
 reasonably intuitive API that leveraged functional programming concepts such as immutability.
 
 \section{A few quantitative points of comparison}
+
+TODO: Compare stats about lines of code.

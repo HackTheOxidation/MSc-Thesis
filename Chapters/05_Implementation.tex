@@ -20,8 +20,10 @@ The \texttt{Node} and \texttt{Expr} data model for the AST from \texttt{hyggec} 
 This requires support for discriminated unions and recursive data type, the former of which was introduced in JDK 17 in the form of sealed
 interfaces; one declares a finite number of exact specializations upon defining the interface itself. This gives the \texttt{Java} compiler
 information about the possible specialization, which it can use to perform case analysis and thus enforce exhaustive pattern matching. Let's
-see records and sealed interfaces in action in the form of \texttt{JHygge}s implementation of \texttt{Expr} in the listing below:
+see records and sealed interfaces in action in the form of \texttt{JHygge}s implementation of \texttt{Expr} in figure \ref{fig:expr_sealed_interface}.
 
+\begin{figure}[H]
+\centering 
 \begin{lstlisting}[language=Java]
 // From Expr.java, reformatted to be more compact and fit within the margins
 public sealed interface Expr<E, T>
@@ -36,11 +38,16 @@ public sealed interface Expr<E, T>
     // ...
 }
 \end{lstlisting}
+\caption{The implementation of Hygge expressions as a \texttt{sealed interface} specifying the exact allowed specializations.}
+\label{fig:expr_sealed_interface}
+\end{figure}
 
 Similar to discriminated unions in \texttt{F\#}, all cases are declared for the sealed interface \texttt{Expr}. However, unlike \texttt{F\#},
 the cases have to be defined as separate classes, records or interfaces. In the case that a specialization is a class, they have to be \texttt{final}.
-Let us examine an example of one of the mutually-recursive specializations of \texttt{Expr}, which also happens to be a \texttt{record}, namely the \texttt{Not}-expression:
+Let us examine an example of one of the mutually-recursive specializations of \texttt{Expr}, which also happens to be a \texttt{record}, namely the \texttt{Not}-expression for which the code is shown in figure \ref{fig:not_record}.
 
+\begin{figure}[H]
+\centering
 \begin{lstlisting}[language=Java]
   // From Expr.java, Not<E, T> is an inner class of Expr<E, T>
   record Not<E, T>(Node<E, T> arg) implements Expr<E, T> {
@@ -51,10 +58,13 @@ Let us examine an example of one of the mutually-recursive specializations of \t
     }
   }
 \end{lstlisting}
+\caption{An implementation of the Hygge \texttt{Not} expression in the form of a \texttt{record}.}
+\label{fig:not_record}
+\end{figure}
 
 Declaring \texttt{Not<E, T>} as a \texttt{record} has the same effect as if it had been declared as a class with private \texttt{final}
 attributes that inherit from the \texttt{java.lang.Record}, where each attribute only has a getter, but not a setter, along with implicit declarations
-of some utility methods, such as the \texttt{Object.equals()}-, \texttt{Object.hashCode()} and \texttt{Object.toString()}-method. Now, this example uses the
+of some utility methods, such as the \texttt{Object.equals()}-, \texttt{Object.hashCode()}- and \texttt{Object.toString()}-method. Now, this example uses the
 \texttt{record} declaration syntax, which does all of the things mentioned above to remove boilerplate to ease the burden of the programmer.
 
 Another important thing to note about the immutability of Java records is that they are shallowly immutable, meaning that although that the record
@@ -77,8 +87,10 @@ the newer \texttt{switch}-expression returns a value and one can use the \texttt
 same variant in a discriminated union. This is useful in multiple compiler phases every time the \texttt{Expr}-type is involved. Take
 the \texttt{reduce}-method as an example; in order to reduce each variant of the \texttt{Expr}-type, the \texttt{switch}-expression is used
 to delegate the responsibility of expression reduction to the appropriate reducer as per our design proposal. An excerpt for the code
-for the \texttt{reduce}-method from \texttt{StandardHyggeInterpreter} is shown below:
+for the \texttt{reduce}-method from \texttt{StandardHyggeInterpreter} is shown on figure \ref{fig:switch_expression_values}:
 
+\begin{figure}[H]
+\centering
 \begin{lstlisting}[language=Java]
   // From StandardHyggeInterpreter.java, slightly reformatted
   @Override
@@ -104,6 +116,9 @@ for the \texttt{reduce}-method from \texttt{StandardHyggeInterpreter} is shown b
     };
   }
 \end{lstlisting}
+\caption{A simple use of a \texttt{switch}-expression to branch based on the Hygge expression contained in a \texttt{Node}. Undiscussed cases have been removed for the sake of brevity.}
+\label{fig:switch_expression_values}
+\end{figure}
 
 As we can see in the listing, the cases can group multiple variants to branch to the same single expression, as with
 the value variants \texttt{UnitVal<E, T>}, etc., which is implicitly returned/yielded. For variants like \texttt{Var<E, T>}, there are
@@ -121,9 +136,11 @@ map types are less straight-forward. Take the \texttt{Seq}-record for the sequen
 \texttt{nodes}, which is of type \texttt{List<Node<E, T>>}. There is a case during interpretation, where the interpreter should apply
 different reductions for a sequence expression depending on the number of successive expressions, namely none, one and more than one.
 While one could use a \texttt{switch}-expression with \texttt{when}-clauses, this would create deep and nested code impairing readability
-due to indentation. Instead, it is simpler to branch on the size of the list using \texttt{if}-statements as shown in the listing below, which
-contains the \texttt{Java}-implementation of the reduction rules for the sequencing expression:
+due to indentation. Instead, it is simpler to branch on the size of the list using \texttt{if}-statements as shown in figure \ref{fig:seq_reduce_implementation},
+which contains the \texttt{Java}-implementation of the reduction rules for the sequencing expression.
 
+\begin{figure}[H]
+\centering
 \begin{lstlisting}[language=Java]
   // From StandardHyggeControlFlowReducer.java
   @Override
@@ -163,6 +180,9 @@ contains the \texttt{Java}-implementation of the reduction rules for the sequenc
         : InterpreterResult.of(env, node.with(new Seq<>(rest)));
   }
 \end{lstlisting}
+\caption{Implementation for the reduction rules of \texttt{Seq}-expressions without the use of a \texttt{switch}-expression}
+\label{fig:seq_reduce_implementation}
+\end{figure}
 
 This implementation is not written in a style that is as functional as the \texttt{hyggec} counterpart and it seems that
 this is one of the compromises of a language like \texttt{Java}, which was not designed to be functional from the beginning.
@@ -183,9 +203,11 @@ In \texttt{Java}, there is the \texttt{java.lang.Optional} type, which is an imp
 supports the $>>=$ (pronounced: ``bind'') and \texttt{return} operations in the form of the \texttt{.flatMap()}-method
 and \texttt{Optional.of()}, respectively. In \texttt{JHygge}, this has been used for the implementation of the interpreter
 reduction rules based on the algorithm from \texttt{hyggec} as reduction is applied until it is impossible to reduce further.
-At that point, the last successful reduced \texttt{Node} is returned. In the listing below, we show an excerpt from
-\texttt{StandardStructReducer.java}, which showcases the use of \texttt{Optional} in the \texttt{reduce()}-method:
+At that point, the last successful reduced \texttt{Node} is returned. In figure \ref{fig:struct_reducer_monads}, we show an excerpt from
+\texttt{StandardStructReducer.java}, which showcases the use of \texttt{Optional} in the \texttt{reduce()}-method.
 
+\begin{figure}[H]
+\centering  
 \begin{lstlisting}[language=Java]
 // From StandardStructReducer.java, all other methods have been redacted ...
 public class StandardStructReducer<E, T> implements StructReducer<E, T> {
@@ -215,16 +237,24 @@ public class StandardStructReducer<E, T> implements StructReducer<E, T> {
 
 }
 \end{lstlisting}
+\caption{Implementation of the reduction rules for Hygge \texttt{struct}s making use of the \texttt{Optional} monad.}
+\label{fig:struct_reducer_monads}
+\end{figure}
 
 As shown in the listing above, the both the \texttt{.flatMap()} and \texttt{.map()} operations as well as \texttt{Optional.of()}
-indirectly (this is hidden in \texttt{InterpreterResult.of()} and \texttt{FunctionalUtilities.tryFind()}).
+indirectly (this is hidden in \texttt{InterpreterResult.of()} and \texttt{FunctionalUtilities.tryFind()}). Notice how using
+this technique emphasizes the ``happy path'' of the program as error propagation becomes implicit due to the functor and monad
+operations \texttt{.map()} and \texttt{.flatMap()} allow the programmer to focus on the data transformations instead of error
+handling.
 
 \section{Parsing Hygge source files with ANTLR4}
 
 As mentioned in the chapter on Architecture and Design, we have selected ANTLR4 as the parser generator of choice. For starters,
 we have translated the \texttt{FsLexYacc} lexer and parser files, \texttt{Lexer.fsl} and \texttt{Parser.fsy}, to ANTLR4
-\texttt{.g4}-format. In the listing below, we show the complete \texttt{.g4} grammar file for the final version of \texttt{JHygge}.
+\texttt{.g4}-format. In figure \ref{fig:hygge_grammar_antlr4}, we show the complete \texttt{.g4} grammar file for the final version of \texttt{JHygge}.
 
+\begin{figure}[H]
+\centering  
 \begin{lstlisting}
 grammar Hygge;
 
@@ -386,6 +416,9 @@ LINE_COMMENT: '//' ~[\r\n]* -> skip ;
 
 fragment EscapeSequence: '\\' [btnfr"'\\] ; 
 \end{lstlisting}
+\caption{Complete ANTLR4 \texttt{.g4} grammar specification for the Hygge language in the final version of \texttt{JHygge}.}
+\label{fig:hygge_grammar_antlr4}
+\end{figure}
 
 Initially, this grammar file was syntactically more similar to the E-BNF for the \texttt{Hygge} specification as an attempt to
 simplify the grammar file as much as possible. However, the \texttt{Hygge} grammar specification does not take operator
@@ -399,7 +432,10 @@ In order to breach the gap between the \texttt{ANTLR4} representation and our de
 we decided to create a visitor, \texttt{AntlrHyggeNodeVisitor}, that provides this transformation. In the listing below, we
 see an excerpt of \texttt{AntlrHyggeNodeVisitor}, namely the \texttt{visitAssertion}, which transforms a \texttt{HyggeParser.AssertionContext}
 to a \texttt{Node} with an \texttt{Expr.Assertion}-expression, as well as the code for the \texttt{Expr.Assertion} record.
+This implementation is shown in figure \ref{fig:antlr_node_visitor}.
 
+\begin{figure}[H]
+\centering 
 \begin{lstlisting}[language=Java]
  
   // From AntlrHyggeNodeVisitor.java
@@ -425,6 +461,9 @@ to a \texttt{Node} with an \texttt{Expr.Assertion}-expression, as well as the co
   }
 
 \end{lstlisting}
+\caption{Combined excerpts from \texttt{AntlrHyggeNodeVisitor.java} and \texttt{Expr.java} showing the visitor and the definition for the \texttt{Ascription}-expression. }
+\label{fig:antlr_node_visitor}
+\end{figure}
 
 The creation of \texttt{Node}- and \texttt{Expr}-objects is mostly straight forward even though they are mutually recursive.
 To parse the argument for the assertion, one simply calls the \texttt{accept()}-method on the subexpression for the visitor
@@ -449,7 +488,7 @@ a method or a constructor. Both the APIs for \texttt{ClassBuilder}s and \texttt{
 however they are different in the respect that a \texttt{CodeBuilder} is immutable whereas a \texttt{ClassBuilder} isn't.
 We utilize this difference in mutability during the code generation of functions and structs.
 
-Let's walk through an example to show, how the Class-file API is used concretely in \texttt{JHygge}. The code listing below shows
+Let's walk through an example to show, how the Class-file API is used concretely in \texttt{JHygge}. The code listing  shows
 the implementation of the \texttt{generateCode()}-method for the \texttt{JVMCodeGenerator}-class. This is the minimal requirement
 for implementing the \texttt{HyggeCodeGenerator}-interface. As we see in the listing, we initially generate an empty \texttt{.class}-file,
 which is always \texttt{HyggeMain.class}, containing the \texttt{HyggeMain} class. The \texttt{ClassBuilder}-API is then used to
@@ -460,6 +499,8 @@ code generation is split across different classes and methods by grouping langua
 Note also, that the \texttt{JVMCodeGeneratorEnvironment}-class keeps a reference to the parent \texttt{ClassBuilder} for the
 \texttt{HyggeMain}-class. This will come in handy later, when generating code for functions, for example.
 
+\begin{figure}[H]
+\centering 
 \begin{lstlisting}[language=Java]
   // From JVMCodeGenerator.java
   @Override
@@ -481,10 +522,22 @@ Note also, that the \texttt{JVMCodeGeneratorEnvironment}-class keeps a reference
             });
   }
 \end{lstlisting}
+\caption{}
+\label{}
+\end{figure}
 
-Depending on the nodes in the AST, we then end up in the appropriate case. For a simple case, let us consider the value
-for the basic built-in types of Hygge
+Depending on the nodes in the AST, we then end up in the appropriate case. For a simple case, let us consider the case
+for value-expressions for the basic built-in types of Hygge, \texttt{UnitVal}, \texttt{BoolVal}, etc. For the \texttt{UnitVal}-case,
+the simplest thing is to do nothing and return an unmodified code builder. The rest of the value expressions all follow a similar approach,
+loading a constant onto the stack with the \texttt{ldc} instruction, except for the \texttt{BoolVal} expression which makes use of the
+\texttt{iconst} instructions instead. With the \texttt{ldc()}-method, the Class-file API places the value in the run-time constant pool
+of the \texttt{HyggeMain} class and automatically inserts the correct reference to the constant in the pool. This is one of the ways
+that the Class-file API provides abstraction while still giving the programmer control over exactly which instructions are generated.
+In figure \ref{fig:jvm_value_codegen}, we show the
+simple implementation of JVM bytecode generation for Hygge values.
 
+\begin{figure}[H]
+\centering
 \begin{lstlisting}[language=Java]
   // From JVMCodeGenerator.java
   public CodeBuilder generateCode(
@@ -500,9 +553,14 @@ for the basic built-in types of Hygge
   }
  
 \end{lstlisting}
+\caption{An excerpt from \texttt{JVMCodeGenerator.java} for the simple case of generating JVM bytecode for Hygge values using the Class-file API.}
+\label{fig:jvm_value_codegen}
+\end{figure}
 
-A more intriguing example would be the code generation for \texttt{if}-expressions:
+A more intriguing example would be the code generation for \texttt{if}-expressions.
 
+\begin{figure}[H]
+\centering 
 \begin{lstlisting}[language=Java]
 // From JVMControlFlowCodeGenerator.java
 public class JVMControlFlowCodeGenerator<E extends TypingEnvironment, T extends Type> {
@@ -534,3 +592,145 @@ public class JVMControlFlowCodeGenerator<E extends TypingEnvironment, T extends 
   // Remaining methods ...
 }
 \end{lstlisting}
+\caption{An excerpt from \texttt{JVMControlFlowCodeGenerator.java} showing code generation for Hygge \texttt{if}-expressions}
+\label{fig:jvm_if_expressions}
+\end{figure}
+
+Generating JVM bytecode for functions... In figure \ref{fig:jvm_function_builder}, the \texttt{generateCode()}-method is shown.
+
+\begin{figure}[H]
+ \centering 
+ \begin{lstlisting}[language=Java]
+  public CodeBuilder generateCode(
+      JVMCodeGenerator<E, T> codeGenerator,
+      JVMCodeGeneratorEnvironment env,
+      CodeBuilder codeBuilder,
+      Node<E, T> node,
+      Lambda<E, T> lambdaExpr) {
+    var methodEnv = env.with(new HashMap<>());
+    for (var arg : lambdaExpr.args()) {
+      methodEnv.store(
+          arg.name(),
+          pretypeResolver.resolvePretype(methodEnv.getTypingEnvironment(), arg.preType()));
+    }
+    env.getParentClass()
+        .withMethodBody(
+            env.getNameStack().peek(),
+            ofDescriptor(
+                JVMCodeGenerationUtility.makeDescriptor(
+                    lambdaExpr.args().stream()
+                        .map(
+                            arg ->
+                                pretypeResolver.resolvePretype(
+                                    env.getTypingEnvironment(), arg.preType()))
+                        .toList(),
+                    lambdaExpr.body().type(),
+                    env)),
+            ClassFile.ACC_PUBLIC | ClassFile.ACC_STATIC,
+            methodCodeBuilder ->
+                JVMCodeGenerationUtility.inferReturn(
+                    codeGenerator.generateCode(lambdaExpr.body(), methodEnv, methodCodeBuilder),
+                    lambdaExpr.body().type(),
+                    env));
+    return codeBuilder;
+  }
+ \end{lstlisting}
+ \caption{Excerpt of the implementation of the \texttt{generateCode()}-method handling Hygge \texttt{Lambda}-expressions in \texttt{JVMFunctionCodeGenerator.java}.}
+ \label{fig:jvm_function_builder}
+\end{figure}
+
+For the final example, we showcase the implementation of code generation for Hygge \texttt{struct}s in figure \ref{fig:jvm_struct_builder}.
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}[language=Java]
+    
+  private CodeBuilder generateConstructorMethodBody(
+      CodeBuilder constructorBuilder,
+      JVMCodeGeneratorEnvironment env,
+      StructCons<E, T> structConsExpr,
+      String structClassName) {
+    constructorBuilder =
+        constructorBuilder
+            .aload(0)
+            .invokespecial(
+                ClassDesc.ofInternalName("java/lang/Object"),
+                "<init>",
+                MethodTypeDesc.ofDescriptor("()V"));
+
+    var i = new AtomicInteger(1);
+    for (var field : structConsExpr.fields().entrySet()) {
+      var fieldType = field.getValue().type();
+      var fieldEnv = field.getValue().env();
+      var slot = i.getAndIncrement();
+      constructorBuilder =
+          loadValueOfType(constructorBuilder.aload(0), fieldEnv, fieldType, slot)
+              .putfield(
+                  ClassDesc.of(structClassName),
+                  field.getKey(),
+                  ClassDesc.ofDescriptor(
+                      JVMCodeGenerationUtility.makeDescriptor(field.getValue().type(), env)));
+    }
+
+    return constructorBuilder.return_();
+  }
+
+  public CodeBuilder generateCode(
+      JVMCodeGenerator<E, T> codeGenerator,
+      JVMCodeGeneratorEnvironment env,
+      CodeBuilder codeBuilder,
+      Node<E, T> node,
+      StructCons<E, T> structConsExpr) {
+    var structClassName = JVMCodeGenerationUtility.getTypeName(node.type(), node.env());
+    var structClassDescriptor = ClassDesc.of(structClassName);
+    var constructorDescriptor =
+        MethodTypeDesc.ofDescriptor(
+            "("
+                + structConsExpr.fields().values().stream()
+                    .map(value -> JVMCodeGenerationUtility.makeDescriptor(value.type(), env))
+                    .collect(Collectors.joining())
+                + ")V");
+
+    var filePath = Path.of(structClassName + ".class").toAbsolutePath();
+    try {
+      ClassFile.of()
+          .buildTo(
+              filePath,
+              structClassDescriptor,
+              classBuilder -> {
+                classBuilder.withFlags(ClassFile.ACC_PUBLIC);
+                for (var field : structConsExpr.fields().entrySet()) {
+                  classBuilder.withField(
+                      field.getKey(),
+                      ClassDesc.ofDescriptor(
+                          JVMCodeGenerationUtility.makeDescriptor(field.getValue().type(), env)),
+                      ClassFile.ACC_PUBLIC);
+                }
+                classBuilder.withMethodBody(
+                    "<init>",
+                    constructorDescriptor,
+                    ClassFile.ACC_PUBLIC,
+                    constructorBuilder ->
+                        generateConstructorMethodBody(
+                            constructorBuilder, env, structConsExpr, structClassName));
+              });
+    } catch (IOException e) {
+      throw new CodeGenerationError(
+          "ERROR - Could not generate class file for struct '"
+              + structClassName
+              + "', caused by: "
+              + e);
+    }
+
+    codeBuilder = codeBuilder.new_(ClassDesc.of(structClassName)).dup();
+
+    for (var field : structConsExpr.fields().entrySet()) {
+      codeBuilder = codeGenerator.generateCode(field.getValue(), env, codeBuilder);
+    }
+
+    return codeBuilder.invokespecial(structClassDescriptor, "<init>", constructorDescriptor);
+  }
+  \end{lstlisting}
+  \caption{Excerpt of the implementation of code generation for Hygge \texttt{structs}s from \texttt{JVMStructCodeGenerator.java}.}
+  \label{fig:jvm_struct_builder}
+\end{figure}
