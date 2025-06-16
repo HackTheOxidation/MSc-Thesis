@@ -499,7 +499,11 @@ from the resolved function return type and is appended.
 For the final high-light, we showcase the implementation of code generation for Hygge \texttt{struct}s in figure \ref{fig:jvm_struct_builder}.
 This is the most problematic of all the Hygge expressions because of the structural type system of Hygge. In the \texttt{Java} language, and consequently the JVM,
 type equivalence is determined nominally, i.e. on the name of two types. A type with some name can only be declared once and is thus unique, enabling
-a simple check for equivalence. The 
+a simple check for equivalence. In a structural type system, equivalence is determined by the contents of a type; if two structs have the same fields with
+the same types, regardless of the name of the structs, they are considered equivalent and thus interchangable. So how can this be reconciled?
+
+The solution is simple: everything in \texttt{Java} is an \texttt{java.lang.Object} (except for primitives, of course). A \texttt{struct} is really
+nothing more than a mapping between names and values, and such an abstraction already exists: the \texttt{java.util.HashMap}. 
 
 \begin{figure}[H]
   \centering
@@ -510,54 +514,29 @@ a simple check for equivalence. The
       CodeBuilder codeBuilder,
       Node<E, T> node,
       StructCons<E, T> structConsExpr) {
-    var structClassName = JVMCodeGenerationUtility.getTypeName(node.type(), node.env());
-    var structClassDescriptor = ClassDesc.of(structClassName);
-    var constructorDescriptor =
-        MethodTypeDesc.ofDescriptor(
-            "("
-                + structConsExpr.fields().values().stream()
-                    .map(value -> JVMCodeGenerationUtility.makeDescriptor(value.type(), env))
-                    .collect(Collectors.joining())
-                + ")V");
+    codeBuilder = codeBuilder.new_(ClassDesc.ofInternalName("java/util/HashMap")).dup();
 
-    var filePath = Path.of(structClassName + ".class").toAbsolutePath();
-    try {
-      ClassFile.of()
-          .buildTo(
-              filePath,
-              structClassDescriptor,
-              classBuilder -> {
-                classBuilder.withFlags(ClassFile.ACC_PUBLIC);
-                for (var field : structConsExpr.fields().entrySet()) {
-                  classBuilder.withField(
-                      field.getKey(),
-                      ClassDesc.ofDescriptor(
-                          JVMCodeGenerationUtility.makeDescriptor(field.getValue().type(), env)),
-                      ClassFile.ACC_PUBLIC);
-                }
-                classBuilder.withMethodBody(
-                    "<init>",
-                    constructorDescriptor,
-                    ClassFile.ACC_PUBLIC,
-                    constructorBuilder ->
-                        generateConstructorMethodBody(
-                            constructorBuilder, env, structConsExpr, structClassName));
-              });
-    } catch (IOException e) {
-      throw new CodeGenerationError(
-          "ERROR - Could not generate class file for struct '"
-              + structClassName
-              + "', caused by: "
-              + e);
-    }
-
-    codeBuilder = codeBuilder.new_(ClassDesc.of(structClassName)).dup();
-
+    var numberOfFields = structConsExpr.fields().size();
     for (var field : structConsExpr.fields().entrySet()) {
+      codeBuilder = codeBuilder.ldc(field.getKey());
       codeBuilder = codeGenerator.generateCode(field.getValue(), env, codeBuilder);
+      var fieldType = TypeUtility.expandType(field.getValue().env(), field.getValue().type());
+      codeBuilder = JVMCodeGenerationUtility.boxPrimitive(codeBuilder, fieldType);
     }
 
-    return codeBuilder.invokespecial(structClassDescriptor, "<init>", constructorDescriptor);
+    return codeBuilder
+        .invokestatic(
+            ClassDesc.ofInternalName("java/util/Map"),
+            "of",
+            MethodTypeDesc.ofDescriptor(
+                "("
+                    + "Ljava/lang/Object;Ljava/lang/Object;".repeat(numberOfFields)
+                    + ")Ljava/util/Map;"),
+            true)
+        .invokespecial(
+            ClassDesc.ofInternalName("java/util/HashMap"),
+            "<init>",
+            MethodTypeDesc.ofDescriptor("(Ljava/util/Map;)V"));
   }
   \end{lstlisting}
   \caption{Excerpt of the implementation of code generation for Hygge \texttt{struct}s from \texttt{JVMStructCodeGenerator.java}.}
@@ -569,36 +548,26 @@ In figure \ref{fig:jvm_constructor_builder}, we show...
 \begin{figure}
     \centering
     \begin{lstlisting}[language=Java]
-  private CodeBuilder generateConstructorMethodBody(
-      CodeBuilder constructorBuilder,
+  public CodeBuilder generateCode(
+      JVMCodeGenerator<E, T> codeGenerator,
       JVMCodeGeneratorEnvironment env,
-      StructCons<E, T> structConsExpr,
-      String structClassName) {
-    constructorBuilder =
-        constructorBuilder
-            .aload(0)
-            .invokespecial(
-                ClassDesc.ofInternalName("java/lang/Object"),
-                "<init>",
-                MethodTypeDesc.ofDescriptor("()V"));
+      CodeBuilder codeBuilder,
+      Node<E, T> node,
+      FieldSelect<E, T> fieldSelectExpr) {
+    codeBuilder = codeGenerator.generateCode(fieldSelectExpr.target(), env, codeBuilder);
+    codeBuilder =
+        codeBuilder
+            .ldc(fieldSelectExpr.field())
+            .invokevirtual(
+                ClassDesc.ofInternalName("java/util/HashMap"),
+                "get",
+                MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)Ljava/lang/Object;"));
 
-    var i = new AtomicInteger(1);
-    for (var field : structConsExpr.fields().entrySet()) {
-      var fieldType = field.getValue().type();
-      var fieldEnv = field.getValue().env();
-      var slot = i.getAndIncrement();
-      constructorBuilder =
-          loadValueOfType(constructorBuilder.aload(0), fieldEnv, fieldType, slot)
-              .putfield(
-                  ClassDesc.of(structClassName),
-                  field.getKey(),
-                  ClassDesc.ofDescriptor(
-                      JVMCodeGenerationUtility.makeDescriptor(field.getValue().type(), env)));
-    }
+    var fieldType = TypeUtility.expandType(node.env(), node.type());
 
-    return constructorBuilder.return_();
+    return JVMCodeGenerationUtility.checkAndUnbox(codeBuilder, fieldType);
   }
     \end{lstlisting}
-    \caption{Implementation of the helper function for generating the code for a constructor body.}
+    \caption{Implementation of the code generator for field selections from \texttt{JVMStructCodeGenerator.java}.}
     \label{fig:jvm_constructor_builder}
 \end{figure}
