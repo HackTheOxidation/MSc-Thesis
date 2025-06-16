@@ -9,14 +9,19 @@ of the \texttt{JHygge} compiler based on the requirements stated in the \ref{sec
 In this section, we discuss the degree to which the new \texttt{JHygge} compiler fulfills the functional and non-functional requirements
 stated in \ref{sec:requirements}.
 
-\subsection{Structural typing on the nominal JVM; not a good cocktail}
+Note: refer back to requirements and show a table of Hygge features versus compilation phases.
 
-As per the Hygge language specification, the typing system for Hygge is structural. \texttt{hyggec} showed that implementing this typing system
-in RISC-V is possible. The story for the JVM backend in \texttt{JHygge} is quite different; we found that there was no straight forward solution
-for implementing the structural Hygge typing system directly on the JVM, as the JVM implements its own nominal subtyping rules based on inheritance.
+\subsection{Structural typing on the nominal JVM}
 
-In the \texttt{Scala} programming language, it is possible to imitate structural typing using the trait \texttt{scala.Selectable}, but this is
-due to the additional abstractions provided by the \texttt{Scala} standard library.
+As per the Hygge language specification, the typing system for Hygge is structural. With \texttt{hyggec} it has been shown
+that implementing this typing system in RISC-V is possible. The story for the JVM backend in \texttt{JHygge} is somewhat different;
+we found that implementing the structural Hygge typing system on the JVM requires some additional layer of abstraction, as
+the JVM primarily enforces its own nominal subtyping rules based on inheritance at the bytecode level.
+However, the solution turned out to be simple.
+
+In the \texttt{Scala} programming language, it is also possible to imitate structural typing using the trait \texttt{scala.Selectable}, but this is
+due to the additional abstractions provided by the \texttt{Scala} standard library and does not change anything about the nominal
+type system at the bytecode level of the JVM.
 
 \section{Modern Java is not quite functional, yet}
 

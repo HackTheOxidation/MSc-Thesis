@@ -45,14 +45,15 @@ To summarize, the \texttt{JHygge} compiler has the following functional requirem
   \item \texttt{JHygge} won't implement Closures.
   \item \texttt{JHygge} should implement a CLI interface akin to that of \texttt{hyggec}.
 \end{itemize}
-\caption{}
-\label{}
+\caption{Functional requirements for the \texttt{JHygge} compiler}
+\label{fig:functional_requirements}
 \end{figure}
 
 With the use of the word ``implement'' in the requirements, we mean that the implementation will provide the same level of support
 for the given feature as the reference compiler \texttt{hyggec} without student modifications. For example, discriminated unions
 and recursive types are only supported by the typechecker and the interpreter, but not the code generator, whereas all the phases
-are supported for functions. We suggest that the reader inspects the source code of \texttt{hyggec} to 
+are supported for functions. We suggest that the reader inspects the source code of \texttt{hyggec} to gain insight as to
+degree of which each Hygge language feature is supported by default.
 
 Additionally, the \texttt{JHygge} compiler has the following non-functional requirements:
 
@@ -65,8 +66,8 @@ Additionally, the \texttt{JHygge} compiler has the following non-functional requ
   \item \texttt{JHygge} must make use of a framework for generating JVM bytecode, for example ASM, Class-file API, ByteBuddy, etc.
   \item \texttt{JHygge} should make use of a build and dependency management system, for example Maven, Gradle, Bazel, etc.
 \end{itemize}
-\caption{}
-\label{}
+\caption{Non-functional requirements for the \texttt{JHygge} compiler}
+\label{fig:nonfunctional_requirements}
 \end{figure}
 
 Together, these fifteen requirements form the specification for the \texttt{JHygge} compiler.
@@ -81,8 +82,8 @@ There are two primary goals of this MSc thesis project:
   \item To explore the functional language features of newer Java releases and re-architect, redesign and rewrite \texttt{hyggec} in the form of \texttt{JHygge} for an extensible, flexible and user-friendly compiler.
   \item To explore the Java Virtual Machine along with its bytecode target language and attempt to implement as many features of the Hygge programming language as possible on the JVM.
 \end{itemize}
-\caption{}
-\label{}
+\caption{Goals, or research questions, of the MSc thesis project.}
+\label{fig:thesis_goals}
 \end{figure}
 
 The first goal is about trying to figure out how to create a balanced architecture in the sense that it should be flexible enough for students to easily add new language features or swap out alternative

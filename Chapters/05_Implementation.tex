@@ -503,7 +503,14 @@ a simple check for equivalence. In a structural type system, equivalence is dete
 the same types, regardless of the name of the structs, they are considered equivalent and thus interchangable. So how can this be reconciled?
 
 The solution is simple: everything in \texttt{Java} is an \texttt{java.lang.Object} (except for primitives, of course). A \texttt{struct} is really
-nothing more than a mapping between names and values, and such an abstraction already exists: the \texttt{java.util.HashMap}. 
+nothing more than a mapping between names and values, and such an abstraction already exists: the \texttt{java.util.HashMap}.
+Exploiting the fact that all classes in \texttt{Java} implicitly inherits from \texttt{java.lang.Object} means that we can
+model structs as \texttt{HashMap<String, Object>} instances. To make this work with primitives whose types cannot be used for generics,
+the solution is to ``box'' and ``unbox'' these values with wrapper classes like \texttt{java.lang.Integer} and \texttt{java.lang.Boolean}.
+In figure \ref{fig:jvm_struct_builder}, we show the implementation of the JVM bytecode generator for Hygge \texttt{struct}s. This utilizes the \texttt{Map.of()}
+method and the \texttt{HashMap} copy constructor for initialization along with the mentioned wrapper classes to ``box''
+any primitives provided by the \texttt{JVMCodeGenerationUtility.boxPrimitive()} utility method to effectively implement
+struct construction.
 
 \begin{figure}[H]
   \centering
@@ -543,7 +550,10 @@ nothing more than a mapping between names and values, and such an abstraction al
   \label{fig:jvm_struct_builder}
 \end{figure}
 
-In figure \ref{fig:jvm_constructor_builder}, we show...
+This makes the subsequent implementation of Hygge field selections straight-forward as the \texttt{HashMap}-API
+provides the convenient \texttt{get} method for retrieving values and the \texttt{Object} instance can accurately be
+casted using the typing information ascribed to each \texttt{Node} during the typechecking phase.
+In figure \ref{fig:jvm_constructor_builder}, we show the implementation of code generation for Hygge field selections.
 
 \begin{figure}
     \centering
@@ -570,4 +580,18 @@ In figure \ref{fig:jvm_constructor_builder}, we show...
     \end{lstlisting}
     \caption{Implementation of the code generator for field selections from \texttt{JVMStructCodeGenerator.java}.}
     \label{fig:jvm_constructor_builder}
+\end{figure}
+
+Similarly, the case for assigning values to a field in a struct is solved by using the \texttt{put()}-method provided
+by the \texttt{HashMap}-API. One thing to note is that the semantics of the Hygge language require that the right-hand side
+of an assignment is the result of such an expression. Therefore, the right-hand side value must be duplicated, stored and
+then be loaded back onto the stack after having updated the field of the struct.
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}[language=Java]
+    
+  \end{lstlisting}
+  \caption{}
+  \label{fig:jvm_field_assignment}
 \end{figure}

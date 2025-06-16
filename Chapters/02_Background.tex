@@ -92,7 +92,7 @@ the machine that it runs on.
 
 JVM bytecode is rather simple in the sense that every instruction is only one byte (except for longs and doubles, which are two bytes, or one word).
 The bytecode in a ``class''-file is also grouped, first by class then by method, to reflect the structure of the JVM discussed earlier.
-To illustrate this, let's go through a small example. In the code snippet below, we show a simple \texttt{Java} program containing a static
+To illustrate this, let's go through a small example. In the code snippet on figure \ref{fig:dummy_java_code}, we show a simple \texttt{Java} program containing a static
 \texttt{main()}-method, an instance method and a constructor:
 
 \begin{figure}[H]
@@ -121,13 +121,13 @@ class Main {
     }
 }
 \end{lstlisting}
-\caption{}
-\label{}
+\caption{Example \texttt{Java} code. The purpose of this code snippet is only to showcase its corresponding JVM bytecode.}
+\label{fig:dummy_java_code}
 \end{figure}
 
 What the code above does is not important. If one then compiles the code with \texttt{javac} (OpenJDK 24.0.0) and then
 dissassembles the resulting \texttt{.class}-file with \texttt{javap}, one obtains (depending on JDK release and compiler flags)
-the following JVM bytecode in human-readable form:
+the JVM bytecode in human-readable form, which is shown on figure \ref{fig:dummy_bytecode}:
 
 \begin{figure}[H]
 \centering 
@@ -177,8 +177,8 @@ class Main {
 
 }
 \end{lstlisting}
-\caption{}
-\label{}
+\caption{Corresponding JVM bytecode for the code from figure \ref{fig:dummy_java_code}}
+\label{fig:dummy_bytecode}
 \end{figure}
 
 Note, that in this example, the run-time constant pool for \texttt{Main} has been removed for the sake of brevity and readability.
