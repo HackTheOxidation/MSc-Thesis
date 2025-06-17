@@ -9,7 +9,13 @@ is asked to implement a simple extension to the hygge language in \texttt{JHygge
 
 For testing the functionality of the new \texttt{JHygge} compiler, a test suite akin to that of \texttt{hyggec} has be made.
 Here, hygge source files for testing are placed in folders marked for testing. These folders are divided first by compiler
-stage/phase and subsequently by whether the program should pass or fail the test.
+stage/phase and subsequently by whether the program should pass or fail the test. One thing to note is that the test
+for the code generation phase will only check that the test program compiles, but not whether it runs correctly as the
+test code does not invoke the JVM on the compiled bytecode.
+
+In addition to the automated test suite, a lot of manual testing of each compiler phase has been done during prototyping.
+In this endevour, the \texttt{JHygge} CLI made using the \texttt{PicoCLI}-framework proved to valuable as it provides a
+quick and easy-to-use interface with access to each individual compiler phase with a single command.
 
 \section{End-user testing of \texttt{JHygge}}
 
@@ -26,3 +32,10 @@ that was shared with current and former students of the compiler construction co
 \caption{The questionaire for the end-user test handed out to students}
 \label{fig:end_user_test}
 \end{figure}
+
+The end-user test ran from May 28th to June 18th 2025. During this period, the students had finished the course ``02247 - Compiler Construction'',
+so they should have been available although some may have chosen to take a course in the 3-week period in June.
+
+Unfortunately, none of the more than 200 students chose to participate in the end-user test, meaning that we do not have any test results
+to present despite our efforts. Therefore, we cannot say anything conclusive about the user-friendliness of the new \texttt{JHygge} compiler
+nor can we in any reasonable way compare it to the user-friendliness of the existing \texttt{hyggec} compiler.
