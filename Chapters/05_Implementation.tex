@@ -584,14 +584,48 @@ In figure \ref{fig:jvm_constructor_builder}, we show the implementation of code 
 
 Similarly, the case for assigning values to a field in a struct is solved by using the \texttt{put()}-method provided
 by the \texttt{HashMap}-API. One thing to note is that the semantics of the Hygge language require that the right-hand side
-of an assignment is the result of such an expression. Therefore, the right-hand side value must be duplicated, stored and
-then be loaded back onto the stack after having updated the field of the struct.
+of an assignment is the result of such an expression. Doing so is luckily also simple as the code generation for field selection
+retrieves the value using the \texttt{get()}-method. One thing to be aware of it that the \texttt{put()}-method returns
+the old value corresponding to a key, or \texttt{null} in the case that the key wasn't in the map before. This value
+is of no use, so it must be popped of the stack using the \texttt{pop}-instruction. An excerpt of the implemention
+of code generation for assignment expressions can be seen on figure \ref{fig:jvm_field_assignment}.
 
 \begin{figure}[H]
   \centering
   \begin{lstlisting}[language=Java]
-    
+  // From JVMCodeGenerator.java
+  private CodeBuilder generateCode(
+      Node<E, T> ast,
+      JVMCodeGeneratorEnvironment env,
+      CodeBuilder codeBuilder,
+      Assign<E, T> assignExpr) {
+    return switch (assignExpr.target().expr()) {
+      case Var<E, T> v -> // Redacted 
+      
+      case FieldSelect<E, T> v -> {
+        codeBuilder = generateCode(v.target(), env, codeBuilder).ldc(v.field());
+        codeBuilder = generateCode(assignExpr.rhs(), env, codeBuilder);
+
+        var rhsType = TypeUtility.expandType(assignExpr.rhs().env(), assignExpr.rhs().type());
+
+        codeBuilder = JVMCodeGenerationUtility.boxPrimitive(codeBuilder, rhsType);
+
+        codeBuilder =
+            codeBuilder
+                .invokevirtual(
+                    ClassDesc.ofInternalName("java/util/HashMap"),
+                    "put",
+                    MethodTypeDesc.ofDescriptor(
+                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+                .pop();
+
+        yield structCodeGenerator.generateCode(this, env, codeBuilder, ast, v);
+      }
+      default -> // Redacted
+    };
+  }
+   
   \end{lstlisting}
-  \caption{}
+  \caption{Excerpt of the implemention of code generation for assignment expressions with an emphasis on field selections.}
   \label{fig:jvm_field_assignment}
 \end{figure}
