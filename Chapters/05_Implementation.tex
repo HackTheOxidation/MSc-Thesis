@@ -44,7 +44,7 @@ public sealed interface Expr<E, T>
 
 Similar to discriminated unions in \texttt{F\#}, all cases are declared for the sealed interface \texttt{Expr}. However, unlike \texttt{F\#},
 the cases have to be defined as separate classes, records or interfaces. In the case that a specialization is a class, they have to be \texttt{final}.
-Let us examine an example of one of the mutually-recursive specializations of \texttt{Expr}, which also happens to be a \texttt{record}, namely the \texttt{Not}-expression for which the code is shown in figure \ref{fig:not_record}.
+Let us examine an example of one of the mutually-recursive specializations of \texttt{Expr}, which also happens to be a \texttt{record}\cite{java_record}, namely the \texttt{Not}-expression for which the code is shown in figure \ref{fig:not_record}.
 
 \begin{figure}[H]
 \centering
@@ -503,7 +503,7 @@ a simple check for equivalence. In a structural type system, equivalence is dete
 the same types, regardless of the name of the structs, they are considered equivalent and thus interchangable. So how can this be reconciled?
 
 The solution is simple: everything in \texttt{Java} is an \texttt{java.lang.Object} (except for primitives, of course). A \texttt{struct} is really
-nothing more than a mapping between names and values, and such an abstraction already exists: the \texttt{java.util.HashMap}.
+nothing more than a mapping between names and values, and such an abstraction already exists: the \texttt{java.util.HashMap}\cite{hashmap}.
 Exploiting the fact that all classes in \texttt{Java} implicitly inherits from \texttt{java.lang.Object} means that we can
 model structs as \texttt{HashMap<String, Object>} instances. To make this work with primitives whose types cannot be used for generics,
 the solution is to ``box'' and ``unbox'' these values with wrapper classes like \texttt{java.lang.Integer} and \texttt{java.lang.Boolean}.
@@ -583,7 +583,7 @@ In figure \ref{fig:jvm_constructor_builder}, we show the implementation of code 
 \end{figure}
 
 Similarly, the case for assigning values to a field in a struct is solved by using the \texttt{put()}-method provided
-by the \texttt{HashMap}-API. One thing to note is that the semantics of the Hygge language require that the right-hand side
+by the \texttt{HashMap}-API\cite{hashmap}. One thing to note is that the semantics of the Hygge language require that the right-hand side
 of an assignment is the result of such an expression. Doing so is luckily also simple as the code generation for field selection
 retrieves the value using the \texttt{get()}-method. One thing to be aware of it that the \texttt{put()}-method returns
 the old value corresponding to a key, or \texttt{null} in the case that the key wasn't in the map before. This value
