@@ -11,6 +11,31 @@ stated in figures \ref{fig:functional_requirements} and \ref{fig:nonfunctional_r
 
 Note: refer back to requirements and show a table of Hygge features versus compilation phases.
 
+\begin{table}[H]
+\centering
+\caption{}
+\label{table:requirements_fulfillment}
+\begin{tabular}{lccccc}
+\cline{1-1}
+\multicolumn{1}{|l|}{}       & \multicolumn{1}{l}{Lexing/Parsing} & \multicolumn{1}{l}{Typechecking} & \multicolumn{1}{l}{Interpretation} & \multicolumn{1}{l}{Codegeneration} & \multicolumn{1}{l}{\textbackslash{}texttt\{hyggec\} compatible?} \\ \cline{1-1}
+Primitive values             & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Variables                    & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Basic Arithmetic (Add, Mul)  & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Basic Logic (And, Or, Not)   & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Typing                       & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Let-bindings                 & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Assignments                  & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Assertions                   & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Read and Print I/O           & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+If-Then-Else                 & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Mutable                      & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+While do                     & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Functions                    & yes                                & yes                              & yes                                & yes                                & yes                                                              \\ \cline{6-6} 
+Structs and Field Selections & yes                                & yes                              & yes                                & \multicolumn{1}{c|}{yes}           & \multicolumn{1}{c|}{yes}                                         \\ \cline{6-6} 
+Unions and Pattern Matching  & yes                                & yes                              & yes                                & no                                 & yes                                                             
+\end{tabular}
+\end{table}
+
 \subsection{Structural typing on the nominal JVM}
 
 As per the Hygge language specification, the typing system for Hygge is structural. With \texttt{hyggec} it has been shown
