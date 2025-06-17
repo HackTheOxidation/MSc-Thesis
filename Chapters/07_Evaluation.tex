@@ -37,14 +37,28 @@ Unions and \texttt{match}  & yes                                & yes           
 Note that although code generation is not supported for unions and pattern matching as shown in Table \ref{table:requirements_fulfillment}, \texttt{JHygge} is still compatible with \texttt{hyggec}
 as this is a project option for the students of the course ``02247 - Compiler Construction'' and therefore not supported out-of-box for \texttt{hyggec}
 either. Aside from that, the table shows that \texttt{JHygge} implements the same level of support for each feature as \texttt{hyggec}.
-When comparing this result with the functional requirements stated in figure \ref{fig:functional_requirements}, this shows fulfillment of all requirements related to support for features of the Hygge language. Administrative-Normal-Form (ANF) and
-``peephole'' optimization has not been implemented, but they were also prioritised low as optional extras not essential to the success of \texttt{JHygge}.
-Besides, one of the purposes of ANF in \texttt{hyggec} is to optimize register allocation for the RISC-V, where there is a limited number of registers
-available, but since the JVM doesn't have the concept of registers this partially justifies assigning it to a lower priority. As for optimization
-in general, while it is part of the course curriculum of ``02247 - Compiler Construction'', one could say that this may not be as beneficial,
-since the JVM utilitizes a Just-In-Time (JIT) compiler for optimizations at run-time, so some attempts to optimize at compile-time may be in vain.
-Optimizations like constant folding and constant propagation would still be usefull, however. As stated, register allocation has not been
-implemented as the JVM does not have this concept, so this aligns with the functional requirements.
+When comparing this result with the functional requirements stated in figure \ref{fig:functional_requirements}, this shows fulfillment of all requirements related to support for features of the Hygge language.
+
+Administrative-Normal-Form (ANF) and ``peephole'' optimization has not been implemented, but they were also prioritised low as optional
+extras not essential to the success of \texttt{JHygge}. Besides, one of the purposes of ANF in \texttt{hyggec} is to optimize register
+allocation for the RISC-V, where there is a limited number of registers available, but since the JVM doesn't have the concept of registers
+this partially justifies assigning it to a lower priority. As for optimization in general, while it is part of the course
+curriculum of ``02247 - Compiler Construction'', one could say that this may not be as beneficial, since the JVM utilitizes a Just-In-Time (JIT)
+compiler for optimizations at run-time, so some attempts to optimize at compile-time may be in vain. Optimizations like constant folding
+and constant propagation would still be usefull, however. As stated, register allocation has not been implemented as the JVM does not have
+this concept, so this aligns with the functional requirements.
+
+Regarding the last of the functional requirements, we can also affirm that a CLI akin to that of \texttt{hyggec} has been implemented. As
+mentioned in the chapter on testing \ref{sec:testing}, this CLI proved useful when testing the various compilation phases.
+As such we have asserted that this requirement for a CLI has been fulfilled by the \texttt{JHygge} compiler.
+
+As for the non-functional requirements stated in figure \ref{fig:nonfunctional_requirements}, we can conclude that \texttt{JHygge} is indeed written in the \texttt{Java} programming language and does make use of functional programming features and design.
+An evaluation as to, how well \texttt{Java} 24 supports functional programming
+is discussed later in this chapter. From the \ref{sec:testing}, we saw the use of the automated testing suite, so this
+has also been covered. During the design stage described the \ref{sec:architecture}, it was already chosen to make use
+of ANTLR4 for parsing, Gradle for build and dependency management, and
+the \texttt{Java} 24 Class-file API for JVM bytecode generation at this point.
+Hence, we can conclude that the \texttt{JHygge} compiler meets all the non-functional requirements.
 
 \subsection{Structural typing on the nominal JVM}
 
@@ -54,7 +68,7 @@ we found that implementing the structural Hygge typing system on the JVM require
 the JVM primarily enforces its own nominal subtyping rules based on inheritance at the bytecode level.
 However, the solution turned out to be simple as \texttt{HashMap<String, Object>} provided a suitable abstraction.
 
-In the \texttt{Scala} programming language, it is also possible to imitate structural typing using the trait \texttt{scala.Selectable}, but this is
+In the \texttt{Scala} programming language, it is also possible to imitate structural typing using the trait \texttt{scala.Selectable}\cite{scala3}, but this is
 due to the additional abstractions provided by the \texttt{Scala} standard library and does not change anything about the nominal
 type system at the bytecode level of the JVM.
 
