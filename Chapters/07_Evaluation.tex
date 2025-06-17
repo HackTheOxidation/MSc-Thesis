@@ -7,9 +7,8 @@ of the \texttt{JHygge} compiler based on the requirements stated in the \ref{sec
 \section{Does JHygge fulfill the requirements?}
 
 In this section, we discuss the degree to which the new \texttt{JHygge} compiler fulfills the functional and non-functional requirements
-stated in figures \ref{fig:functional_requirements} and \ref{fig:nonfunctional_requirements}.
-
-Note: refer back to requirements and show a table of Hygge features versus compilation phases.
+stated in figures \ref{fig:functional_requirements} and \ref{fig:nonfunctional_requirements}. In table \ref{table:requirements_fulfillment}, we provide an overview of Hygge language feature support for each of the four compilation phases of
+\texttt{JHygge} along with a summary of whether the level of support for a given feature matches that of \texttt{hyggec}.
 
 \begin{table}[H]
 \centering
@@ -31,9 +30,21 @@ Functions                    & yes                                & yes         
 Structs and Fields & yes                                & yes                              & yes                                & yes           & yes                                         \\ 
 Unions and \texttt{match}  & yes                                & yes                              & yes                                & no                                 & yes                                                             
 \end{tabular}
-\caption{Overview of feature support for each of the compilation stages.}
+\caption{Overview of feature support for each of the compilation stages along with a summarizing column showing compatibility with \texttt{hyggec}.}
 \label{table:requirements_fulfillment}
 \end{table}
+
+Note that although code generation is not supported for unions and pattern matching as shown in Table \ref{table:requirements_fulfillment}, \texttt{JHygge} is still compatible with \texttt{hyggec}
+as this is a project option for the students of the course ``02247 - Compiler Construction'' and therefore not supported out-of-box for \texttt{hyggec}
+either. Aside from that, the table shows that \texttt{JHygge} implements the same level of support for each feature as \texttt{hyggec}.
+When comparing this result with the functional requirements stated in figure \ref{fig:functional_requirements}, this shows fulfillment of all requirements related to support for features of the Hygge language. Administrative-Normal-Form (ANF) and
+``peephole'' optimization has not been implemented, but they were also prioritised low as optional extras not essential to the success of \texttt{JHygge}.
+Besides, one of the purposes of ANF in \texttt{hyggec} is to optimize register allocation for the RISC-V, where there is a limited number of registers
+available, but since the JVM doesn't have the concept of registers this partially justifies assigning it to a lower priority. As for optimization
+in general, while it is part of the course curriculum of ``02247 - Compiler Construction'', one could say that this may not be as beneficial,
+since the JVM utilitizes a Just-In-Time (JIT) compiler for optimizations at run-time, so some attempts to optimize at compile-time may be in vain.
+Optimizations like constant folding and constant propagation would still be usefull, however. As stated, register allocation has not been
+implemented as the JVM does not have this concept, so this aligns with the functional requirements.
 
 \subsection{Structural typing on the nominal JVM}
 
@@ -78,8 +89,8 @@ Both of these are single use, single purpose construction whose names are not im
 \section{The Class-file API in action}
 
 Although the previous section evaluating our experiences with \texttt{Java} as a functional programming language came out as rather disappointing,
-this section will be a lot more positive as we found that the Java 24 Class-file API to not just work as advertised, but also to provide a
-reasonably intuitive API that leveraged functional programming concepts such as immutability.
+this section will be a lot more positive as we find that the Java 24 Class-file API to not just work as advertised, but also to provide a
+reasonably intuitive and declarative API that leveraged functional programming concepts such as immutability.
 
 \section{A few quantitative points of comparison}
 
