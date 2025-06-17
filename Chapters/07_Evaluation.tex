@@ -13,15 +13,12 @@ Note: refer back to requirements and show a table of Hygge features versus compi
 
 \begin{table}[H]
 \centering
-\caption{}
-\label{table:requirements_fulfillment}
 \begin{tabular}{lccccc}
-\cline{1-1}
-\multicolumn{1}{|l|}{}       & \multicolumn{1}{l}{Lexing/Parsing} & \multicolumn{1}{l}{Typechecking} & \multicolumn{1}{l}{Interpretation} & \multicolumn{1}{l}{Codegeneration} & \multicolumn{1}{l}{\textbackslash{}texttt\{hyggec\} compatible?} \\ \cline{1-1}
+\multicolumn{1}{l|}{}       & \multicolumn{1}{l}{Parsing} & \multicolumn{1}{l}{Typechecker} & \multicolumn{1}{l}{Interpreter} & \multicolumn{1}{l}{Codegen} & \multicolumn{1}{l}{\texttt{hyggec} compatible?} \\ \cline{1-1}
 Primitive values             & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
 Variables                    & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
-Basic Arithmetic (Add, Mul)  & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
-Basic Logic (And, Or, Not)   & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Basic Arithmetic  & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
+Basic Logic   & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
 Typing                       & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
 Let-bindings                 & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
 Assignments                  & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
@@ -30,10 +27,12 @@ Read and Print I/O           & yes                                & yes         
 If-Then-Else                 & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
 Mutable                      & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
 While do                     & yes                                & yes                              & yes                                & yes                                & yes                                                              \\
-Functions                    & yes                                & yes                              & yes                                & yes                                & yes                                                              \\ \cline{6-6} 
-Structs and Field Selections & yes                                & yes                              & yes                                & \multicolumn{1}{c|}{yes}           & \multicolumn{1}{c|}{yes}                                         \\ \cline{6-6} 
-Unions and Pattern Matching  & yes                                & yes                              & yes                                & no                                 & yes                                                             
+Functions                    & yes                                & yes                              & yes                                & yes                                & yes                                                              \\  
+Structs and Fields & yes                                & yes                              & yes                                & yes           & yes                                         \\ 
+Unions and \texttt{match}  & yes                                & yes                              & yes                                & no                                 & yes                                                             
 \end{tabular}
+\caption{Overview of feature support for each of the compilation stages.}
+\label{table:requirements_fulfillment}
 \end{table}
 
 \subsection{Structural typing on the nominal JVM}
