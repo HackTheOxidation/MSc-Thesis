@@ -70,9 +70,9 @@ of some utility methods, such as the \texttt{Object.equals()}-, \texttt{Object.h
 Another important thing to note about the immutability of Java records is that they are shallowly immutable, meaning that although that the record
 attributes, also called components, cannot be altered, the attributes of the record components can be mutable. That is, this \texttt{Not<E, T>} record
 has an \texttt{arg} component of type \texttt{Node<E, T>}, which is also a record, but had \texttt{arg} been declared as a class with mutable
-attributes, the programmer could still change the value of those attributes eventhough \texttt{Not<E, T>} is a record.
+attributes, the programmer could still change the value of those attributes even though \texttt{Not<E, T>} is a record.
 
-A record is also \texttt{final} in the sense that extending record types through inheritance is prohibitted; it cannot be used as a base for
+A record is also \texttt{final} in the sense that extending record types through inheritance is prohibited; it cannot be used as a base for
 further specialization. This makes sense in the context of sealed interfaces and pattern matching, where it would otherwise be difficult
 to perform case analysis and reason about pattern exhaustion had some variant in the discriminated union been a regular class that could
 have had an unknown number of specializations.
@@ -81,7 +81,7 @@ have had an unknown number of specializations.
 
 In the preceding section, we mentioned pattern matching when discussing the use of discriminated unions. In order to handle the different variants
 of a discriminated union, pattern matching gives the programmer a way to not only branch based on the value of the active variant, but also on
-the properties and the structure of the value (in some languages). With JEP XXX, the \texttt{switch}-expression was introduced in Java, which behaves
+the properties and the structure of the value (in some languages). With JEP 441\cite{jep441}, the \texttt{switch}-expression was introduced in Java, which behaves
 similarly to the \texttt{match}-expressions in languages like \texttt{F\#} and \texttt{Rust}. Unlike the existing \texttt{switch}-statement,
 the newer \texttt{switch}-expression returns a value and one can use the \texttt{when}-clause to branch to multiple different cases for the
 same variant in a discriminated union. This is useful in multiple compiler phases every time the \texttt{Expr}-type is involved. Take
@@ -122,13 +122,13 @@ for the \texttt{reduce}-method from \texttt{StandardHyggeInterpreter} is shown o
 
 As we can see in the listing, the cases can group multiple variants to branch to the same single expression, as with
 the value variants \texttt{UnitVal<E, T>}, etc., which is implicitly returned/yielded. For variants like \texttt{Var<E, T>}, there are
-two different cases to handle, where the \texttt{when}-clause is used to disguish between these cases without having to resort to
+two different cases to handle, where the \texttt{when}-clause is used to distinguish between these cases without having to resort to
 additional constructs for control flow creating unwanted nesting. One might point out, that this essentially a functional programming
 version of the Visitor pattern known from Object-oriented design. So, this is a case, where both FP and OOP style want to solve the
 same problem, but do it in different yet still somewhat similar ways.
 
 However, while pattern matching with \texttt{switch}-expressions can be useful, there is still limited support for it as one
-can only pattern match on reference types (classes, interfaces, enums, etc.) as of Java 24 (a proposal for use with primitives is in preview with JEP XXX).
+can only pattern match on reference types (classes, interfaces, enums, etc.) as of Java 24 (a proposal for use with primitives is in preview with JEP 488\cite{jep488}).
 That is, one cannot easily do pattern matching on the structure or value of a type. Take the list data structure as an example;
 in \texttt{F\#}, one can match not only against the type, but also the value and patterns of values, i.e. matching against \texttt{x :: xs}
 would mean that there is at least one element in the list and maybe more. These kinds of patterns are not supported in Java 24, so working with lists and
@@ -199,7 +199,7 @@ may produce something or nothing, and in the case of nothing, there is no inform
 where when a failure occurs, the programmer should not be concerned about why it failed. On the other hand, the Result/Either
 type is used when the programmer is interested in the cause of failure and want to act on it.
 
-In \texttt{Java}, there is the \texttt{java.lang.Optional} type, which is an implementation of the Option/Maybe monad. It
+In \texttt{Java}, there is the \texttt{java.lang.Optional}\cite{java_optional} type, which is an implementation of the Option/Maybe monad. It
 supports the $>>=$ (pronounced: ``bind'') and \texttt{return} operations in the form of the \texttt{.flatMap()}-method
 and \texttt{Optional.of()}, respectively. In \texttt{JHygge}, this has been used for the implementation of the interpreter
 reduction rules based on the algorithm from \texttt{hyggec} as reduction is applied until it is impossible to reduce further.
@@ -253,14 +253,14 @@ As mentioned in the chapter on Architecture and Design, we have selected ANTLR4 
 we have translated the \texttt{FsLexYacc} lexer and parser files, \texttt{Lexer.fsl} and \texttt{Parser.fsy}, to ANTLR4
 \texttt{.g4}-format. In appendix \ref{appendix:hygge_grammar}, we show the complete \texttt{.g4} grammar file for the final version of \texttt{JHygge}.
 
-Initially, this grammar file was syntactically more similar to the E-BNF for the \texttt{Hygge} specification as an attempt to
+Initially, this grammar file was syntactically more similar to the E-BNF\cite{ebnf} for the \texttt{Hygge} specification\cite{lecture_notes} as an attempt to
 simplify the grammar file as much as possible. However, the \texttt{Hygge} grammar specification does not take operator
 precedence into account, so it was later decided to factor out left-recursion and enforce operator precedence by separating
-production rules similar to that of \texttt{Parser.fsy} in \texttt{hyggec}.
+production rules similar to that of \texttt{Parser.fsy} in \texttt{hyggec}\cite{hyggec}.
 
-By default, \texttt{ANTLR4} generates both a lexer and a parser along with classes for implementing listeners and visitors.
+By default, \texttt{ANTLR4} generates both a lexer and a parser along with classes for implementing listeners and visitors\cite{antlr4_book}.
 One could implement the rest of \texttt{JHygge} using the \texttt{ANTLR4} AST representation, but this AST is intended to
-be consumed or transformed by listeners and visitors, respecitively. Instead, we want a more functional model of an AST.
+be consumed or transformed by listeners and visitors, respectively. Instead, we want a more functional model of an AST.
 In order to breach the gap between the \texttt{ANTLR4} representation and our desired \texttt{Node} and \texttt{Expr} data model,
 we decided to create a visitor, \texttt{AntlrHyggeNodeVisitor}, that provides this transformation. In the listing below, we
 see an excerpt of \texttt{AntlrHyggeNodeVisitor}, namely the \texttt{visitAssertion}, which transforms a \texttt{HyggeParser.AssertionContext}
@@ -299,9 +299,9 @@ This implementation is shown in figure \ref{fig:antlr_node_visitor}.
 \end{figure}
 
 The creation of \texttt{Node}- and \texttt{Expr}-objects is mostly straight forward even though they are mutually recursive.
-To parse the argument for the assertion, one simply calls the \texttt{accept()}-method on the subexpression for the visitor
+To parse the argument for the assertion, one simply calls the \texttt{accept()}-method on the sub-expression for the visitor
 context, which will recursively traverse and transform the AST to \texttt{Node}-instances. Most of the expression types
-follow a similar implementation style as the one for assertions. There are some of these tranformations that are more complicated,
+follow a similar implementation style as the one for assertions. There are some of these transformations that are more complicated,
 like function declarations, structs, unions, etc., but it is the same case for declaring the equivalent parser for \texttt{hyggec}
 using \texttt{FsLexYacc}.
 
@@ -314,11 +314,11 @@ the largest contributor.
 \section{Generating JVM bytecode with the Class-file API from Java 24} \label{sec:codegen}
 
 The Class-file API\cite{jep484} promises a declarative approach to reading, modifying and writing \texttt{.class}-files. The main parts of the
-API used in the implementation of the JVM backend in \texttt{JHygge} is the \texttt{ClassBuilder}\cite{java_classbuilder} and the \texttt{CodeBuilder}\cite{java_codebuilder}.
+API used in the implementation of the JVM back-end in \texttt{JHygge} is the \texttt{ClassBuilder}\cite{java_classbuilder} and the \texttt{CodeBuilder}\cite{java_codebuilder}.
 A \texttt{ClassBuilder} is intended for modifying classes at a higher-level, such as adding attributes/fields, constructors and methods,
 without directly handling bytecode. A \texttt{CodeBuilder} is then used to construct the sequence of bytecode instructions in
 a method or a constructor. Both the APIs for \texttt{ClassBuilder}s and \texttt{CodeBuilder}s make use of the builder pattern, which is one of the
-classic creational OOP design patterns.
+classic creational OOP design patterns\cite{gof}.
 
 Let's walk through an example to show, how the Class-file API is used concretely in \texttt{JHygge}. The code listing on figure \ref{fig:codegen_main} shows
 the implementation of the \texttt{generateCode()}-method for the \texttt{JVMCodeGenerator}-class. This is the minimal requirement
@@ -395,7 +395,7 @@ This offset is calculated from the number bytes taken up by every instruction an
 these offsets manually would incur some bookkeeping on the programmer, but luckily the Class-file API provides the \texttt{Label}\cite{java_label} abstraction,
 which accounts for the offsets automatically relieving this burden. Still, the Class-file API offers control as the methods for generating branching
 instructions accept a \texttt{Label} as an argument and the \texttt{labelBinding()}-method\cite{java_codebuilder} allows the programmer to arbitrarily set the target for a label.
-This makes for a straight-forward, concise and declarative implemention of Hygge \texttt{if}-expressions.
+This makes for a straight-forward, concise and declarative implementation of Hygge \texttt{if}-expressions.
 
 \begin{figure}[H]
 \centering 
@@ -444,10 +444,10 @@ the stack and then invoke the \texttt{apply()}-method on it.
 This is a lot of hoops to jump through. Rather than using all sorts of abstractions like \texttt{Function}, it is simpler to just generate static
 methods and attach them to the parent class and register the function name and type signature in the \texttt{JVMCodeGeneratorEnvironment}, which
 keeps track of information for JVM bytecode generation. This \texttt{JVMCodeGeneratorEnvironment} should also provide a way to reference the
-parent class. Recall the earlier note on the difference in mutability between a \texttt{ClassBuilder} and \texttt{CodeBuilder} and it becomes
+parent class. Since a \texttt{ClassBuilder} is mutable, it is
 sensible to let the \texttt{JVMCodeGeneratorEnvironment} keep a reference to the builder for the parent class. When encountering
 an application of the function/method, one can simply use the \texttt{invokestatic}\cite{jvm_spec} instruction without first having to push a reference
-to some class to the top of the stack. In figure \ref{fig:jvm_function_builder}, the \texttt{generateCode()}-method is shown.
+to some class to the top of the stack as all Hygge functions are compiled to static methods on the JVM. In figure \ref{fig:jvm_function_builder}, the \texttt{generateCode()}-method is shown.
 
 \begin{figure}[H]
  \centering 
@@ -490,7 +490,7 @@ to some class to the top of the stack. In figure \ref{fig:jvm_function_builder},
  \label{fig:jvm_function_builder}
 \end{figure}
 
-Aside from that, all that is needed is to format some method and class descriptors in the form of strings. This is done using the pretype resolution strategy
+Aside from that, all that is needed is to format some method and class descriptors in the form of strings. This is done using the pre-type resolution strategy
 implemented as part of the typechecking phase to infer the argument and return types of the function. Generating the JVM bytecode for the function
 body is also easy as the code generator can be invoked on the lambdas body expression. As a final step, an appropriate return instruction is inferred
 from the resolved function return type and is appended.
@@ -499,7 +499,7 @@ For the final high-light, we showcase the implementation of code generation for 
 This is the most problematic of all the Hygge expressions because of the structural type system of Hygge. In the \texttt{Java} language, and consequently the JVM,
 type equivalence is determined nominally, i.e. on the name of two types. A type with some name can only be declared once and is thus unique, enabling
 a simple check for equivalence. In a structural type system, equivalence is determined by the contents of a type; if two structs have the same fields with
-the same types, regardless of the name of the structs, they are considered equivalent and thus interchangable. So how can this be reconciled?
+the same types, regardless of the name of the structs, they are considered equivalent and thus interchangeable\cite{pierce}. So how can this be reconciled?
 
 The solution is simple: everything in \texttt{Java} is an \texttt{java.lang.Object}\cite{java_object} (except for primitives, of course). A \texttt{struct} is really
 nothing more than a mapping between names and values, and such an abstraction already exists: the \texttt{java.util.HashMap}\cite{hashmap}.
@@ -551,7 +551,7 @@ struct construction.
 
 This makes the subsequent implementation of Hygge field selections straight-forward as the \texttt{HashMap}-API
 provides the convenient \texttt{get} method for retrieving values and the \texttt{Object} instance can accurately be
-casted using the typing information ascribed to each \texttt{Node} during the typechecking phase.
+cast using the typing information ascribed to each \texttt{Node} during the typechecking phase.
 In figure \ref{fig:jvm_constructor_builder}, we show the implementation of code generation for Hygge field selections.
 
 \begin{figure}
@@ -586,7 +586,7 @@ by the \texttt{HashMap}-API\cite{hashmap}. One thing to note is that the semanti
 of an assignment is the result of such an expression. Doing so is luckily also simple as the code generation for field selection
 retrieves the value using the \texttt{get()}-method. One thing to be aware of it that the \texttt{put()}-method returns
 the old value corresponding to a key, or \texttt{null} in the case that the key wasn't in the map before. This value
-is of no use, so it must be popped of the stack using the \texttt{pop}-instruction\cite{jvm_spec}. An excerpt of the implemention
+is of no use, so it must be popped of the stack using the \texttt{pop}-instruction\cite{jvm_spec}. An excerpt of the implementation
 of code generation for assignment expressions can be seen on figure \ref{fig:jvm_field_assignment}.
 
 \begin{figure}[H]

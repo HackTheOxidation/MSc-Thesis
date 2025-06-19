@@ -4,9 +4,9 @@ In this chapter, we discuss the findings and the lessons learned during this MSc
 of the \texttt{JHygge} compiler based on the requirements stated in the \ref{sec:requirements} chapter and the results achieved in
 \ref{sec:testing}. Finally, we discuss the goals of this MSc Thesis project and the degree to which they have been achieved.
 
-\section{Does JHygge fulfill the requirements?}
+\section{Does JHygge fulfil the requirements?}
 
-In this section, we discuss the degree to which the new \texttt{JHygge} compiler fulfills the functional and non-functional requirements
+In this section, we discuss the degree to which the new \texttt{JHygge} compiler fulfils the functional and non-functional requirements
 stated in figures \ref{fig:functional_requirements} and \ref{fig:nonfunctional_requirements}. In table \ref{table:requirements_fulfillment}, we provide an overview of Hygge language feature support for each of the four compilation phases of
 \texttt{JHygge} along with a summary of whether the level of support for a given feature matches that of \texttt{hyggec}.
 
@@ -37,16 +37,16 @@ Unions and \texttt{match}  & yes                                & yes           
 Note that although code generation is not supported for unions and pattern matching as shown in Table \ref{table:requirements_fulfillment}, \texttt{JHygge} is still compatible with \texttt{hyggec}
 as this is a project option for the students of the course ``02247 - Compiler Construction'' and therefore not supported out-of-box for \texttt{hyggec}
 either. Aside from that, the table shows that \texttt{JHygge} implements the same level of support for each feature as \texttt{hyggec}.
-When comparing this result with the functional requirements stated in figure \ref{fig:functional_requirements}, this shows fulfillment of all requirements related to support for features of the Hygge language. That is, functional requirements \textbf{F01} to \textbf{F06}. \textbf{F09} and \textbf{F10} are also met as \texttt{JHygge}
+When comparing this result with the functional requirements stated in figure \ref{fig:functional_requirements}, this shows fulfilment of all requirements related to support for features of the Hygge language. That is, functional requirements \textbf{F01} to \textbf{F06}. \textbf{F09} and \textbf{F10} are also met as \texttt{JHygge}
 does not support neither closures nor register allocation.
 
 Administrative-Normal-Form (ANF), \textbf{F08}, and ``peephole'' optimization, \textbf{F07}, have not been implemented, but they were also prioritised as low and as optional
 extras not essential to the success of \texttt{JHygge}. Besides, one of the purposes of ANF in \texttt{hyggec} is to optimize register
 allocation for the RISC-V, where there is a limited number of registers available (Module 11 of \cite{lecture_notes}), but since the JVM doesn't have the concept of registers
 this partially justifies assigning it to a lower priority. As for optimization in general, while it is part of the course
-curriculum of ``02247 - Compiler Construction'', one could say that this may not be as beneficial, since the JVM utilitizes a Just-In-Time (JIT)
-compiler for optimizations at run-time, so some attempts to optimize at compile-time may be in vain. Optimizations like constant folding
-and constant propagation would still be usefull, however. As stated, register allocation has not been implemented as the JVM does not have
+curriculum of ``02247 - Compiler Construction''\cite{curriculum_02247}, one could say that this may not be as beneficial, since the JVM utilizes a Just-In-Time (JIT)
+compiler for optimizations at run-time\cite{jvm_spec}, so some attempts to optimize at compile-time may be in vain. Optimizations like constant folding
+and constant propagation would still be useful, however. As stated, register allocation has not been implemented as the JVM does not have
 this concept, so this aligns with the functional requirements.
 
 Regarding the last of the functional requirements, \textbf{F11}, we can also affirm that a CLI akin to that of \texttt{hyggec} has been implemented. As
@@ -86,7 +86,7 @@ When comparing the implementation of \texttt{JHygge} to that of \texttt{hyggec},
 monad as it is properly supported in \texttt{F\#}. This would have made implementing the typechecking easier. Instead, due to the lack
 of \texttt{Result}, we chose to use exceptions instead for the typechecking and (JVM) code-generation phases. Exceptions do produce a
 side-effect, which isn't desirable, but it does make the code simpler to understand for students who primarily have experience using
-\texttt{Java} in the more common OOP style. As a final note on the \texttt{Result}, while it is not the goal of this thesis to attempt
+\texttt{Java} in the more common OOP style. As a final note on the \texttt{Result} monad, while it is not the goal of this thesis to attempt
 to ``complete'' support for functional programming features in \texttt{Java}, it is baffling to see that this type has not been implemented
 in \texttt{Java} when \texttt{Optional} has. As a minor experiment, a proposed implementation for discriminated union-based \texttt{Result}
 monad has been made and it can be found in Appendix \ref{appendix:result_java}.
@@ -136,9 +136,9 @@ the current stack frame.
 
 During the implementation of JVM bytecode generation for \texttt{struct}s and field selections, an interesting problem arose.
 As per the Hygge language specification, the typing system for Hygge is structural. With \texttt{hyggec} it has been shown
-that implementing this typing system in RISC-V is possible. The story for the JVM backend in \texttt{JHygge} is somewhat different;
+that implementing this typing system in RISC-V is possible. The story for the JVM back-end in \texttt{JHygge} is somewhat different;
 we found that implementing the structural Hygge typing system on the JVM requires some additional layer of abstraction, as
-the JVM primarily enforces its own nominal subtyping rules based on inheritance at the bytecode level.
+the JVM primarily enforces its own nominal sub-typing rules based on inheritance at the bytecode level.
 However, the solution turned out to be simple as \texttt{HashMap<String, Object>}\cite{hashmap} provided a suitable abstraction.
 
 In the \texttt{Scala} programming language, it is also possible to imitate structural typing using the trait \texttt{scala.Selectable}\cite{scala3}, but this is
