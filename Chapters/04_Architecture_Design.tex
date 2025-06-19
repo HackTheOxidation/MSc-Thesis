@@ -1,148 +1,4 @@
-\chapter{Compiler Architecture and Design}\label{sec:architecture}
-
-In this chapter, we discuss general compiler architecture and design as well as the particular design of the reference compiler, \texttt{hyggec}.
-Thereafter, we present an architecture and design proposal for \texttt{JHygge}.
-
-From a birds eye perspective, a compiler is a program that transforms textual input data to some other representation in the form of a target language.
-The target language can be many different types of languages: from low-level machine languages to other high-level programming languages.
-The textual input data usually comes in the form of a data stream, either as a file stream when reading a source file or as a character stream when
-reading user input from a console or tty. The most generic way to describe the typical architecture of a compiler would be the ``Pipes and Filters''
-architectural pattern. In this pattern, the program consists of independent stages of data transformations, which are connected as a unified system.
-As the name of the pattern suggests, there are two types of elements in this architecture: pipes and filters. Filters are stages of data transformations,
-and the pipes are the connections between filters, which acts as data adapters.
-
-The important part about the ``Pipes and Filters'' architectural pattern is that filters are completely independent of each other. One could consider
-every filter to be a separate program. Thus, with the right pipe, or data adapter, any two filters could be connected. If one considers the architecture
-of the \texttt{hyggec} compiler, it has a lexer/parser, a typechecker, an interpreter, an optimizer and a code generator. All of these are filters,
-as they are still independent. For example, the interpreter takes an untyped AST as its input and produces an evaluation in the form of a reduced AST
-and the associated side-effects. The point is that it doesn't matter how the untyped AST input is produced as this is not the responsibility of the
-interpreter. Another example is the typechecker. It takes an untyped AST and produces a typed AST. It doesn't care where the untyped AST input comes
-from nor where the resulting typed AST goes. This means that when viewing the \texttt{hyggec} compiler through the perspective of ``Pipes and Filters'',
-any filter can be placed at any point in the pipeline, where the input and output types match. In functional programming, one could say that this is
-essentially just function composition at the architectural level, as every filter can be viewed as a function with input and output types.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Pictures/basic_compiler_phases.png}
-\caption{Basic phases of a Compiler made by A. Scalas.}
-\label{fig:compiler_phases}
-\end{figure}
-
-If we consider the general architecture of a compiler as illustrated by A. Scalas on figure, a compiler consists of four overall phases:
-lexing, parsing, analysis and code generation. On figure, we also see the respective inputs and outputs of each phase. If one were to
-look at this from the perspective of ``pipes and filters'', the input and outputs would be the pipes and the phases would be the filters.
-Going a step further, a functional programmer would perhaps claim that a general compiler is a program that consists of four functions:
-
-\begin{itemize}
-  \item $Lexing : SourceProgram \rightarrow TokenStream$
-  \item $Parsing : TokenStream \rightarrow AbstractSyntaxTree$
-  \item $Analysis : AbstractSyntaxTree \rightarrow IntermediateRepresentation$
-  \item $CodeGeneration : IntermediateRepresentation \rightarrow TargetProgram$
-\end{itemize}
-
-As such, the definition for the function \texttt{Compiler} would be:
-
-\begin{align*}
-  Compiler &: SourceProgram \rightarrow TargetProgram \\
-  Compiler &= Lexing \circ Parsing \circ Analysis \circ CodeGeneration
-\end{align*}
-
-where $\circ$ is the function composition operator. From an Object-Oriented Design perspective, one wouldn't necessarily be thinking about the structure
-of a compiler in terms of function definitions, but instead be concerned with the properties of this architecture. To achieve independent phases, or filters,
-is essential that the system has low coupling (minimal dependence between unrelated components) and high cohesion (related functionality is grouped together).
-
-\section{Compilation phases in detail}
-
-Now that we have been acquainted with the overall structure of a general compiler, we take a closer look a each of the compilation phases in greater detail,
-high-lighting both the purpose as well as some of the challenges associated with each stage.
-
-\subsection{Lexing and Parsing}
-
-The purpose of the lexing and parsing is to transform a source file, or character stream, into some form of syntax tree at a suitable representation of
-the program contained within the source file. There are different kinds of syntax trees, but here we'll consider Abstract Syntax Trees (AST) to be the
-most common form. Lexing and Parsing may either be considered as separate or combined phases in the architecture of a compiler.
-
-To specify the syntax of a programming language, one can use a formal grammar. There are different kinds of grammar, but we'll mainly consider Context-Free
-Grammars (CFG), as this kind of grammar is usually sufficient to express all the valid strings of the language. A CFG describes a Context-Free Language (CFL).
-A Push-Down Automata (PDA) is capable of recognizing a CFL. For an in-depth explaination of CFGs, CFLs, PDAs, and the associated challenged, we
-recommend ``Introduction to the Theory of Computation, 3rd Edition'' by M. Sipser.
-
-After having specified the syntax of the programming language to implement, one needs a lexer/parser to recognize it. While some may choose to write a lexer/parser
-from scratch to suit their particular needs, it is often quite time-consuming to implement and verify its correctness, especially when the language evolves with
-frequent changes to the syntax rules. A parser generator is a program that can generate the source code for a parser program given a language syntax specification.
-This can save a lot of development time, especially when prototyping with new language features which require syntax alterations.
-
-There exists many parser generators with support for different programming languages to generate parser programs for. Examples include \texttt{ANTLR4}, \texttt{GNU Bison},
-\texttt{JavaCC} and \texttt{FsLexYacc}. Aside from supporting different programming languages, the most distinguishing feature among parser generators are their parsing algorithms.
-There are different parsing algorithms. For the previously mentioned parser generators, \texttt{ANTLR4} uses ``Adaptive LL(*)'', \texttt{FsLexYacc} uses ``LALR'' and \texttt{JavaCC}
-uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the grammar of the programming language. For example, a CFG may have to be free of left-recursion for an ``LL(1)'' algorithm to recognize the language correctly.
-
-\subsection{Analysis}
-
-Analysis is an umbrella term for different kinds of program analysis that may be performed at this phase of a compiler. Examples of this includes typechecking, optimizations at the AST-level,
-static analysis, etc. It is also possible that a compiler may perform multiple kinds of analysis. While there are many interesting topics in the field of program analysis,
-we will only discuss mostly typechecking and briefly optimization for the sake of keep this discussion in scope of the thesis goals.
-
-Typechecking is the process of checking that the structure of an AST abides to the rules of a type system. There are different type systems with different typing disciples:
-strong vs. weak, static vs. dynamic (and duck), nominal vs. structural. For some programming languages, typechecking is only partial or skipped entirely. Instead,
-an error is generated at runtime when the typing rules are violated. This is typical of languages with dynamic type systems such as \texttt{Python}, \texttt{Ruby} and
-\texttt{JavaScript}. Other programming languages with weak type systems, such as \texttt{C} or \texttt{JavaScript}, perform implicit conversions to make a value ``fit''.
-Languages with static type systems, such as \texttt{F\#}, \texttt{Haskell} and \texttt{Rust}, enforce their typing rules at compile-time using typechecking.
-
-The type system for \texttt{Hygge} is static, strong and structural: Typechecking is enforced at compile-time, primitive types cannot be interchanged, and type
-equivalence for composite types (i.e. structures and discriminated unions) are determined by their underlying structure rather than their names. 
-
-\subsection{Code generation}
-
-The code generation phases of a compiler does exactly that. It converts a well-typed AST to its target-language form by traversing it and generating code.
-Code generation strategies vary depending on quite a few parameters and issues: the intended target language, the IR and semantics of the language to generate code for,
-instruction selection, register allocation and assignment, memory management, etc. While there are templating engines and source-to-source compilers,
-also referred to as transpilers, we will focus solely on code generation for Instruction Set Architectures (ISA) in the form of assembly, bytecode or the like.
-For machine languages, such as RISC-V, M68k, Intel x86, etc., all of the previously mentioned issues apply. For targets such as JVM bytecode, the programmer
-doesn't have to take registers and memory management into account as the JVM doesn't have the concept of registers and the underlying virtual machine
-implements automatic memory management in the form of garbage collection. Instruction selection and the internal representation of the language are still
-important as the JVM is stack-based and thus compiler has to generate the bytecode instructions in the correct order on the stack for arithmetic and
-logical operations as well as method invocations.
-
-\section{The \texttt{hyggec} architecture and design}
-
-In this section, we briefly present the architecture and design of the reference compiler, \texttt{hyggec}. As \texttt{hyggec} is a didactic compiler,
-some compiler phases may be simpler and fewer compared to that of a compiler for programming languages intended for real-world use.
-
-In figure \ref{fig:hyggec_compiler_phases}, we see the compiler architecture for \texttt{hyggec} by A. Scalas. If we compare it
-to figure \ref{fig:compiler_phases}, we observe that each stage has been concretized. For lexical analysis and parsing, \texttt{FsLexYacc}
-is used to auto-generate a lexer and a parser to convert a source file into an Intermediate Representation (IR) in the form of an untyped 
-AST. This untyped AST is then undergoing an analysis in the form of typechecking, converting the untyped AST into a typed one. At the
-final phase of the \texttt{hyggec} compiler architecture pipeline, RISC-V code is being generated. Although not illustrated on figure
-\ref{fig:hyggec_compiler_phases}, \texttt{hyggec} also has an interpreter that can consume an AST, typed or not.
-There is also a small degree of optimization in \texttt{hyggec}, most of which the students are asked to implement at the appropriate
-phases during the later part of ``02247 - Compiler Construction''.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Pictures/hyggec_compiler_phases.png}
-\caption{The compiler architecture of \texttt{hyggec} made by A. Scalas.}
-\label{fig:hyggec_compiler_phases}
-\end{figure}
-
-Looking at the code itself for \texttt{hyggec}, the layout is quite simple; one file per compilation stage as well as a few extra
-files for miscellenious utilities. The AST is modelled in a functional style using mutually recursively-defined records and discriminated
-unions, \texttt{Node} and \texttt{Expr}. A \texttt{Node} represents a node in the syntax tree and contains information about the
-position in the source file, the typing environment, the type, and most importantly the expression at this node. An \texttt{Expr}
-represents the all posible expressions in the Hygge language, which may be either a terminal expression such as a value or identifier
-or composite expression which have child nodes. Since the Hygge language consists exclusively of expressions, this kind of model is
-able to capture the entire language. The lexer and parser defined in \texttt{Lexer.fsl} and \texttt{Parser.fsy}, respectively,
-constructs instances of \texttt{Node}s and \texttt{Expr}s to form an AST upon successfully parsing a source file.
-
-The AST instances constructed by the generated parser are untyped as they contain no type information and no typing environment.
-To annotate the AST with typing information, the typechecker implements the \texttt{typer} function, which updates every \texttt{Node}
-with a \texttt{Type} and a \texttt{TypingEnv} according to the typing rules. There are a few utility functions, but the \texttt{typer}
-function does most of work for typing judgements case-by-case through pattern matching on the expression of a \texttt{Node}. This
-approach of having a single function to do (almost) all of the work, then use pattern matching to work the different cases and
-finally return a \texttt{Result} monad also applies to the interpreter and code generator phases. While these functions many have
-different inputs and produce different outputs, the overall design is the same.
-
-\section{Architecture and Design of \texttt{JHygge}}
+\chapter{Architecture and Design of \texttt{JHygge}}\label{sec:architecture}
 
 Now that we've discussed the architecture and design of the reference compiler, \texttt{hyggec}, we'll attempt to come up with
 a refined architecture and design for the new compiler, \texttt{JHygge}. The reason we call it a refined architecture is due to
@@ -161,7 +17,7 @@ want to change is the implementation language (\texttt{F\#} to \texttt{Java}), t
 the target language (RISC-V assembly to JVM bytecode), and most profoundly, the internal design of the typechecking, interpretation
 and code generator phases.
 
-\subsection{Gradle as an easy-to-use build system}
+\section{Gradle as an easy-to-use build system}
 
 When using \texttt{F\#}, the \texttt{dotnet} CLI provides a simple build and project management tool which comes by default
 with the installation of the \textit{.NET}-platform. In the Java world, the choice is a little more nuanced as there is
@@ -195,7 +51,7 @@ easy to use DSL. For version management of dependencies, one can optionally use 
 dependency versioning from task specification. That's it, the student won't have to install anything besides Java and they
 can build the project in one simple command: \texttt{gradlew build}.
 
-\subsection{ANTLR4 for parsing}
+\section{ANTLR4 for parsing}
 
 Similar to \texttt{hyggec}, we want to use a parser generator tool for ease-of-use as the course ``02247'', as well as this
 thesis itself, focuses mostly on the later phases of compilation. We have explored two options, \texttt{JavaCC} and \texttt{ANTLR4},
@@ -218,7 +74,7 @@ is capable of generating parsers in other languages such as \texttt{python}, \te
 impact the development of \texttt{JHygge}, one could reuse the \texttt{.g4} grammar file for the base Hygge language if some
 students wanted to do a custom project in another language.
 
-\subsection{A flexible design for the typechecking, interpretation and code generator stages}
+\section{A flexible design for the typechecking, interpretation and code generator stages}
 
 As mentioned earlier when high-lighting the weak points of the architecture of the \texttt{hyggec} compiler, the design is inflexible as it
 depends on concretizations rather than abstractions. So, we seek a design that is more aligned with the \textit{SOLID} principles
@@ -297,7 +153,7 @@ discussed in the following subsection.
 \label{fig:codegenerator_classes}
 \end{figure}
 
-\subsection{Java 24 Class-file API for JVM bytecode generation}
+\section{Java 24 Class-file API for JVM bytecode generation}
 
 The \texttt{hyggec} compiler implements its own abstraction layer for RISC-V assembly to ease the implementation of the code
 generation phase. This is one the good points about the \texttt{hyggec} compiler, which we want to maintain in the \texttt{JHygge}
@@ -327,7 +183,7 @@ classes shown in figure \ref{fig:jvm_codegenerator_classes}. This design still f
 as we assume that there will only be one code generation backend for JVM bytecode, where potential improvements will be implemented implace.
 This is also due to the fact that the code generation strategies may be very different for different target languages.
 
-\subsection{PicoCLI for a user-friendly CLI}
+\section{PicoCLI for a user-friendly CLI}
 
 The \texttt{hyggec} compiler has a CLI for invoking the different compiler phases on a source file. This is a very useful feature,
 when the student want to quickly test an arbitrary hygge program, so we want to maintain a similar CLI in the \texttt{JHygge} compiler.

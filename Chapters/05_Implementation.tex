@@ -311,22 +311,21 @@ parser for \texttt{hyggec} is 100 lines (\texttt{Lexer.fsl}) and 305 lines (\tex
 implementation takes up approx. $48\%$ more lines than the \texttt{F\#} version, where the \texttt{AntlrHyggeNodeVisitor} is
 the largest contributor.
 
-\section{Generating JVM bytecode with the Class-file API from Java 24}
+\section{Generating JVM bytecode with the Class-file API from Java 24} \label{sec:codegen}
 
 The Class-file API promises a declarative approach to reading, modifying and writing \texttt{.class}-files. The main parts of the
 API used in the implementation of the JVM backend in \texttt{JHygge} is the \texttt{ClassBuilder} and the \texttt{CodeBuilder}.
 A \texttt{ClassBuilder} is intended for modifying classes at a higher-level, such as adding attributes, constructors and methods,
 without directly handling bytecode. A \texttt{CodeBuilder} is then used to construct the sequence of bytecode instructions in
-a method or a constructor. Both the APIs for \texttt{ClassBuilder}s and \texttt{CodeBuilder}s make use of the builder pattern,
-however they are different in the respect that a \texttt{CodeBuilder} is immutable whereas a \texttt{ClassBuilder} isn't.
-We utilize this difference in mutability during the code generation of functions and structs.
+a method or a constructor. Both the APIs for \texttt{ClassBuilder}s and \texttt{CodeBuilder}s make use of the builder pattern, which is one of the
+classic creational OOP design patterns.
 
 Let's walk through an example to show, how the Class-file API is used concretely in \texttt{JHygge}. The code listing on figure \ref{fig:codegen_main} shows
 the implementation of the \texttt{generateCode()}-method for the \texttt{JVMCodeGenerator}-class. This is the minimal requirement
 for implementing the \texttt{HyggeCodeGenerator}-interface. As we see in figure \ref{fig:codegen_main}, we initially generate an empty \texttt{.class}-file,
 which is always \texttt{HyggeMain.class}, containing the \texttt{HyggeMain} class. The \texttt{ClassBuilder}-API is then used to
 generate the static \texttt{main()}-method, which the JVM will look for and use as an entry-point. To generate the code for
-the body of the \texttt{main()}-method, we use the immutable \texttt{CodeBuilder}-API. Similar to the typechecker and the interpreter,
+the body of the \texttt{main()}-method, we use the \texttt{CodeBuilder}-API. Similar to the typechecker and the interpreter,
 code generation is split across different classes and methods by grouping language features together, so the overloaded and private
 \texttt{generateCode()}-method will then dispatch to the correct code generator method depending on the top-level node in the AST.
 Note also, that the \texttt{JVMCodeGeneratorEnvironment}-class keeps a reference to the parent \texttt{ClassBuilder} for the
@@ -446,7 +445,7 @@ This is a lot of hoops to jump through. Rather than using all sorts of abstracti
 methods and attach them to the parent class and register the function name and type signature in the \texttt{JVMCodeGeneratorEnvironment}, which
 keeps track of information for JVM bytecode generation. This \texttt{JVMCodeGeneratorEnvironment} should also provide a way to reference the
 parent class. Recall the earlier note on the difference in mutability between a \texttt{ClassBuilder} and \texttt{CodeBuilder} and it becomes
-sensible to let the \texttt{JVMCodeGeneratorEnvironment} keep a reference to the mutable builder for the parent class. When encountering
+sensible to let the \texttt{JVMCodeGeneratorEnvironment} keep a reference to the builder for the parent class. When encountering
 an application of the function/method, one can simply use the \texttt{invokestatic} instruction without first having to push a reference
 to some class to the top of the stack. In figure \ref{fig:jvm_function_builder}, the \texttt{generateCode()}-method is shown.
 
