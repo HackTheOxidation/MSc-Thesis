@@ -21,7 +21,7 @@ preferably \texttt{F\#}. This includes knowing the four core principles/the four
 \end{enumerate}
 
 From the Functional programming paradigm, we assume that the reader is familiar with principles such as immutability, referential transparency,
-higher-order functions. This roughly corresponds to the curriculum of the course ``02157 - Functional Programming'' at the Technical University of 
+higher-order functions. This roughly corresponds to the curriculum of the course ``02157 - Functional Programming''\cite{curriculum_02157} at the Technical University of 
 Denmark. Advanced Functional Programming concepts such as functors, applicative functors and monads, most notably the Maybe/Option monad and
 the Result/Either monad, may be helpful, but not essential to understand the work of this thesis. 
 
@@ -31,12 +31,12 @@ and the ``SOLID'' principles are also useful to know.
 \section{Programming language theory and Compiler Construction}
 
 As this project is mainly about writing a compiler, some knowledge of programming language theory is needed.
-Most notably, we recommend a basic understanding of syntax trees, regular expressions and Context-Free Grammars (CFG) from Theory of Computation.
+Most notably, we recommend a basic understanding of syntax trees, regular expressions and Context-Free Grammars (CFG) from Theory of Computation\cite{sipser}.
 For describing to rules of the Hygge programming language, we recommend a basic understanding of structural operational semantics, substitutions
 and inference rules from logic. With regards to type systems, it is helpful to be knowledgable about typing rules and the different
 typing disciplines: strong vs. weak, nominal vs. structural and static vs. dynamic.
 
-That is, knowledge corresponding to the curriculum of the course ``02247 - Compiler Construction'' covers all of the mentioned prerequisites.
+That is, knowledge corresponding to the curriculum of the course ``02247 - Compiler Construction''\cite{curriculum_02247} covers all of the above-mentioned prerequisites.
 
 \section{Java and the JVM ecosystem}
 
@@ -59,13 +59,13 @@ The most relevant features from newer versions of Java, described in their respe
 which will be investigated throughout this thesis, are as follows:
 
 \begin{itemize}
-    \item JEP 488 (JDK 24): Primitive Types in Patterns, instanceof, and switch
-    \item JEP 484 (JDK 24): Class-File API
-    \item JEP 441 (JDK 21): Pattern Matching for switch
-    \item JEP 443 (JDK 21): Unnamed Patterns and Variables
-    \item JEP 440 (JDK 21): Record Patterns
-    \item JEP 395 (JDK 17): Records
-    \item JEP 409 (JDK 17): Sealed Classes
+    \item JEP 488 (JDK 24)\cite{jep488}: Primitive Types in Patterns, instanceof, and switch
+    \item JEP 484 (JDK 24)\cite{jep484}: Class-File API
+    \item JEP 441 (JDK 21)\cite{jep441}: Pattern Matching for switch
+    \item JEP 443 (JDK 21)\cite{jep443}: Unnamed Patterns and Variables
+    \item JEP 440 (JDK 21)\cite{jep440}: Record Patterns
+    \item JEP 395 (JDK 17)\cite{jep395}: Records
+    \item JEP 409 (JDK 17)\cite{jep409}: Sealed Classes
 \end{itemize}
 
 Some of these JEPs may have predecessor JEPs for earlier releases of Java, but we have omitted those and only referenced the latest refinements. 
@@ -74,7 +74,7 @@ Some of these JEPs may have predecessor JEPs for earlier releases of Java, but w
 
 The Java platform is more than the Java language. It consists of its own virtual machine,
 the Java Virtual Machine (JVM), which can execute ``class''-files with JVM bytecode, among other things.
-According to the Java SE 24 ``Java Virtual Machine Specification'', the JVM is an abstract computing machine
+According to the Java SE 24 ``Java Virtual Machine Specification''\cite{jvm_spec}, the JVM is an abstract computing machine
 and does not assume anything about the underlying hardware platform that it runs on. This is the basis for the
 ``WORA - Write Once, Run Anywhere'' principle.
 
@@ -186,8 +186,8 @@ Comparing this bytecode with its equivalent \texttt{Java} source program, they a
 Syntactically, one can say that it is a mix of \texttt{Java} and assembly-like instructions. Every instruction belongs to a
 method and every method is part of a class. Notice that a constructor for a class is not that different from a method at
 the bytecode level; both constructors and instance methods have a reference to the object at local storage byte offset zero.
-The primary difference is that the constructor invokes the \texttt{Object} constructor and calls
-for invoking the \texttt{Main} constructor itself must be done using the \texttt{invokespecial} instruction. On the other
+The primary difference is that the constructor invokes the \texttt{Object}\cite{java_object} constructor and calls
+for invoking the \texttt{Main} constructor itself must be done using the \texttt{invokespecial}\cite{jvm_spec} instruction. On the other
 hand, calling instance methods and static methods are done using the \texttt{invokevirtual} and \texttt{invokestatic} instructions,
 respectively. The hashmarks with numbers, i.e. \#33, are references to the run-time constant pool.
 
@@ -197,7 +197,7 @@ From a birds eye perspective, a compiler is a program that transforms textual in
 The target language can be many different types of languages: from low-level machine languages to other high-level programming languages.
 The textual input data usually comes in the form of a data stream, either as a file stream when reading a source file or as a character stream when
 reading user input from a console or tty. The most generic way to describe the typical architecture of a compiler would be the ``Pipes and Filters''
-architectural pattern. In this pattern, the program consists of independent stages of data transformations, which are connected as a unified system.
+architectural pattern\cite{cunningham}. In this pattern, the program consists of independent stages of data transformations, which are connected as a unified system.
 As the name of the pattern suggests, there are two types of elements in this architecture: pipes and filters. Filters are stages of data transformations,
 and the pipes are the connections between filters, which acts as data adapters.
 
@@ -218,7 +218,7 @@ essentially just function composition at the architectural level, as every filte
 \label{fig:compiler_phases}
 \end{figure}
 
-If we consider the general architecture of a compiler as illustrated by A. Scalas on figure, a compiler consists of four overall phases:
+If we consider the general architecture of a compiler as illustrated by A. Scalas on figure \ref{fig:compiler_phases}, a compiler consists of four overall phases:
 lexing, parsing, analysis and code generation. On figure, we also see the respective inputs and outputs of each phase. If one were to
 look at this from the perspective of ``pipes and filters'', the input and outputs would be the pipes and the phases would be the filters.
 Going a step further, a functional programmer would perhaps claim that a general compiler is a program that consists of four functions:
@@ -254,16 +254,16 @@ most common form. Lexing and Parsing may either be considered as separate or com
 
 To specify the syntax of a programming language, one can use a formal grammar. There are different kinds of grammar, but we'll mainly consider Context-Free
 Grammars (CFG), as this kind of grammar is usually sufficient to express all the valid strings of the language. A CFG describes a Context-Free Language (CFL).
-A Push-Down Automata (PDA) is capable of recognizing a CFL. For an in-depth explaination of CFGs, CFLs, PDAs, and the associated challenged, we
-recommend ``Introduction to the Theory of Computation, 3rd Edition'' by M. Sipser.
+A Push-Down Automata (PDA) is capable of recognizing a CFL. For an in-depth explaination of CFGs, CFLs, PDAs, and the associated challenges, we
+recommend ``Introduction to the Theory of Computation, 3rd Edition'' by M. Sipser\cite{sipser}.
 
 After having specified the syntax of the programming language to implement, one needs a lexer/parser to recognize it. While some may choose to write a lexer/parser
-from scratch to suit their particular needs, it is often quite time-consuming to implement and verify its correctness, especially when the language evolves with
+from scratch to suit their particular needs, it may be quite time-consuming to implement and verify its correctness, especially when the language evolves with
 frequent changes to the syntax rules. A parser generator is a program that can generate the source code for a parser program given a language syntax specification.
 This can save a lot of development time, especially when prototyping with new language features which require syntax alterations.
 
-There exists many parser generators with support for different programming languages to generate parser programs for. Examples include \texttt{ANTLR4}, \texttt{GNU Bison},
-\texttt{JavaCC} and \texttt{FsLexYacc}. Aside from supporting different programming languages, the most distinguishing feature among parser generators are their parsing algorithms.
+There exists many parser generators with support for different programming languages to generate parser programs for. Examples include \texttt{ANTLR4}\cite{antlr4}, \texttt{GNU Bison}\cite{gnu_bison},
+\texttt{JavaCC}\cite{javacc} and \texttt{FsLexYacc}\cite{fslexyacc}. Aside from supporting different programming languages, the most distinguishing feature among parser generators are their parsing algorithms.
 There are different parsing algorithms. For the previously mentioned parser generators, \texttt{ANTLR4} uses ``Adaptive LL(*)'', \texttt{FsLexYacc} uses ``LALR'' and \texttt{JavaCC}
 uses ``LL(k)'' parsing. These algorithms impose restrictions on the form of the grammar of the programming language. For example, a CFG may have to be free of left-recursion for an ``LL(1)'' algorithm to recognize the language correctly.
 
@@ -306,7 +306,7 @@ AST. This untyped AST is then undergoing an analysis in the form of typechecking
 final phase of the \texttt{hyggec} compiler architecture pipeline, RISC-V code is being generated. Although not illustrated on figure
 \ref{fig:hyggec_compiler_phases}, \texttt{hyggec} also has an interpreter that can consume an AST, typed or not.
 There is also a small degree of optimization in \texttt{hyggec}, most of which the students are asked to implement at the appropriate
-phases during the later part of ``02247 - Compiler Construction''.
+phases during the later part of ``02247 - Compiler Construction''\cite{curriculum_02247}.
 
 \begin{figure}[H]
 \centering

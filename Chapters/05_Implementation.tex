@@ -9,7 +9,7 @@ of the final implementation of \texttt{JHygge}.
 As the purpose of this thesis is also to explore the newer functional features of \texttt{Java}. The existing implementation of \texttt{hyggec}
 is indeed very functional, so we attempted to write the implementations of both the AST, typechecker and interpreter in such a way that
 the \texttt{JHygge} versions are as close to those of \texttt{hyggec}, disregarding the architectural and design differences. Some of
-the newer functional features of \texttt{Java} we wanted to investigate include records (immutable classes), sealed interfaces (discriminated unions),
+the newer functional features of \texttt{Java} we wanted to investigate include records\cite{java_record}\cite{jep395} (immutable classes), sealed interfaces (discriminated unions)\cite{jep409},
 switch expressions (pattern matching) and the introduction of some monads, most notably \texttt{Optional}. In the following sections,
 we show concrete examples of implementation, where we have attempted to use said features and compare them to the corresponding code
 in \texttt{hyggec}.
@@ -313,9 +313,9 @@ the largest contributor.
 
 \section{Generating JVM bytecode with the Class-file API from Java 24} \label{sec:codegen}
 
-The Class-file API promises a declarative approach to reading, modifying and writing \texttt{.class}-files. The main parts of the
-API used in the implementation of the JVM backend in \texttt{JHygge} is the \texttt{ClassBuilder} and the \texttt{CodeBuilder}.
-A \texttt{ClassBuilder} is intended for modifying classes at a higher-level, such as adding attributes, constructors and methods,
+The Class-file API\cite{jep484} promises a declarative approach to reading, modifying and writing \texttt{.class}-files. The main parts of the
+API used in the implementation of the JVM backend in \texttt{JHygge} is the \texttt{ClassBuilder}\cite{java_classbuilder} and the \texttt{CodeBuilder}\cite{java_codebuilder}.
+A \texttt{ClassBuilder} is intended for modifying classes at a higher-level, such as adding attributes/fields, constructors and methods,
 without directly handling bytecode. A \texttt{CodeBuilder} is then used to construct the sequence of bytecode instructions in
 a method or a constructor. Both the APIs for \texttt{ClassBuilder}s and \texttt{CodeBuilder}s make use of the builder pattern, which is one of the
 classic creational OOP design patterns.
@@ -361,7 +361,7 @@ Note also, that the \texttt{JVMCodeGeneratorEnvironment}-class keeps a reference
 Depending on the nodes in the AST, we then end up in the appropriate case. For a simple case, let us consider the case
 for value-expressions for the basic built-in types of Hygge, \texttt{UnitVal}, \texttt{BoolVal}, etc. For the \texttt{UnitVal}-case,
 the simplest thing is to do nothing and return an unmodified code builder. The rest of the value expressions all follow a similar approach,
-loading a constant onto the stack with the \texttt{ldc} instruction, except for the \texttt{BoolVal} expression which makes use of the
+loading a constant onto the stack with the \texttt{ldc}\cite{jvm_spec} instruction, except for the \texttt{BoolVal} expression which makes use of the
 \texttt{iconst} instructions instead. With the \texttt{ldc()}-method, the Class-file API places the value in the run-time constant pool
 of the \texttt{HyggeMain} class and automatically inserts the correct reference to the constant in the pool. This is one of the ways
 that the Class-file API provides abstraction while still giving the programmer control over exactly which instructions are generated.
@@ -390,11 +390,11 @@ In figure \ref{fig:jvm_value_codegen}, we show the simple implementation of JVM 
 
 This is rather simple, but it doesn't show the full potential of the Class-file API. A more intriguing example would be the code generation
 for \texttt{if}-expressions for which the code is shown in figure \ref{fig:jvm_if_expressions}. To implement Hygge \texttt{if}-expressions on the JVM, labels are used. Similar to assembly, JVM bytecode
-has branching instructions such as \texttt{ifne} and \texttt{goto}. However, these branching instructions don't jump to a label, but rather an offset in bytes.
+has branching instructions such as \texttt{ifne} and \texttt{goto}\cite{jvm_spec}. However, these branching instructions don't jump to a label, but rather an offset in bytes.
 This offset is calculated from the number bytes taken up by every instruction and operand since the beginning of a method body. Calculating
-these offsets manually would incur some bookkeeping on the programmer, but luckily the Class-file API provides the \texttt{Label} abstraction,
+these offsets manually would incur some bookkeeping on the programmer, but luckily the Class-file API provides the \texttt{Label}\cite{java_label} abstraction,
 which accounts for the offsets automatically relieving this burden. Still, the Class-file API offers control as the methods for generating branching
-instructions accept a \texttt{Label} as an argument and the \texttt{labelBinding()}-method allows the programmer to arbitrarily set the target for a label.
+instructions accept a \texttt{Label} as an argument and the \texttt{labelBinding()}-method\cite{java_codebuilder} allows the programmer to arbitrarily set the target for a label.
 This makes for a straight-forward, concise and declarative implemention of Hygge \texttt{if}-expressions.
 
 \begin{figure}[H]
@@ -436,7 +436,7 @@ public class JVMControlFlowCodeGenerator<E extends TypingEnvironment, T extends 
 
 Generating JVM bytecode for functions becomes a bit trickier. The issue being that one cannot really create methods inside a method in the JVM,
 at least not at the bytecode level. Here, what would be a lambda function in \texttt{Java} becomes a private static method on the parent class
-of the current scope. Holding a reference to a function is also not as easy as one must use a \texttt{java.util.function.Function} instance and
+of the current scope. Holding a reference to a function is also not as easy as one must use a \texttt{java.util.function.Function}\cite{java_function} instance and
 this generic class cannot have primitive types as its type parameters, so this requires some boxing and unboxing with wrapper-classes such as \texttt{Integer}.
 Additionally, when one wants to apply the function to some arguments one must push the reference to the \texttt{Function} instance to the top of
 the stack and then invoke the \texttt{apply()}-method on it.
@@ -446,7 +446,7 @@ methods and attach them to the parent class and register the function name and t
 keeps track of information for JVM bytecode generation. This \texttt{JVMCodeGeneratorEnvironment} should also provide a way to reference the
 parent class. Recall the earlier note on the difference in mutability between a \texttt{ClassBuilder} and \texttt{CodeBuilder} and it becomes
 sensible to let the \texttt{JVMCodeGeneratorEnvironment} keep a reference to the builder for the parent class. When encountering
-an application of the function/method, one can simply use the \texttt{invokestatic} instruction without first having to push a reference
+an application of the function/method, one can simply use the \texttt{invokestatic}\cite{jvm_spec} instruction without first having to push a reference
 to some class to the top of the stack. In figure \ref{fig:jvm_function_builder}, the \texttt{generateCode()}-method is shown.
 
 \begin{figure}[H]
@@ -501,7 +501,7 @@ type equivalence is determined nominally, i.e. on the name of two types. A type 
 a simple check for equivalence. In a structural type system, equivalence is determined by the contents of a type; if two structs have the same fields with
 the same types, regardless of the name of the structs, they are considered equivalent and thus interchangable. So how can this be reconciled?
 
-The solution is simple: everything in \texttt{Java} is an \texttt{java.lang.Object} (except for primitives, of course). A \texttt{struct} is really
+The solution is simple: everything in \texttt{Java} is an \texttt{java.lang.Object}\cite{java_object} (except for primitives, of course). A \texttt{struct} is really
 nothing more than a mapping between names and values, and such an abstraction already exists: the \texttt{java.util.HashMap}\cite{hashmap}.
 Exploiting the fact that all classes in \texttt{Java} implicitly inherits from \texttt{java.lang.Object} means that we can
 model structs as \texttt{HashMap<String, Object>} instances. To make this work with primitives whose types cannot be used for generics,
@@ -586,7 +586,7 @@ by the \texttt{HashMap}-API\cite{hashmap}. One thing to note is that the semanti
 of an assignment is the result of such an expression. Doing so is luckily also simple as the code generation for field selection
 retrieves the value using the \texttt{get()}-method. One thing to be aware of it that the \texttt{put()}-method returns
 the old value corresponding to a key, or \texttt{null} in the case that the key wasn't in the map before. This value
-is of no use, so it must be popped of the stack using the \texttt{pop}-instruction. An excerpt of the implemention
+is of no use, so it must be popped of the stack using the \texttt{pop}-instruction\cite{jvm_spec}. An excerpt of the implemention
 of code generation for assignment expressions can be seen on figure \ref{fig:jvm_field_assignment}.
 
 \begin{figure}[H]
