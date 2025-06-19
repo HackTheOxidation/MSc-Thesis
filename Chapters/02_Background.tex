@@ -4,8 +4,8 @@ In order to get the most out of the thesis, we recommend that the reader is fami
 In this section, we will go through some of the required background and prerequisite knowledge at varying degrees of detail, perhaps only at a glance if 
 other sources already provide an appropriate in-depth explanation of well-established knowledge.
 
-The knowledge used in this thesis project spans from rigid maths-based topics such as programming language theory to softer subjects such 
-programming paradigms, design patterns and compiler architecture. For some of these topics, the reader is only required to have a basic knowledge. 
+The knowledge used in this thesis project spans from rigid maths-based topics such as programming language theory\cite{sipser} to softer subjects such 
+programming paradigms, design patterns\cite{clean_architecture} and compiler architecture. For some of these topics, the reader is only required to have a basic knowledge. 
 
 \section{Programming Languages and Paradigms}
 
@@ -22,7 +22,7 @@ preferably \texttt{F\#}. This includes knowing the four core principles/the four
 
 From the Functional programming paradigm, we assume that the reader is familiar with principles such as immutability, referential transparency,
 higher-order functions. This roughly corresponds to the curriculum of the course ``02157 - Functional Programming''\cite{curriculum_02157} at the Technical University of 
-Denmark. Advanced Functional Programming concepts such as functors, applicative functors and monads, most notably the Maybe/Option monad and
+Denmark. Advanced Functional Programming concepts such as functors, applicative functors and monads\cite{hutton}, most notably the Maybe/Option monad and
 the Result/Either monad, may be helpful, but not essential to understand the work of this thesis. 
 
 Furthermore, topics from Object-Oriented Design and Architecture such as ``Low-coupling, High cohesion''\cite{clean_architecture}, ``Gang of Four'' (GoF)\cite{gof} design patterns
@@ -34,7 +34,7 @@ As this project is mainly about writing a compiler, some knowledge of programmin
 Most notably, we recommend a basic understanding of syntax trees, regular expressions and Context-Free Grammars (CFG) from Theory of Computation\cite{sipser}.
 For describing to rules of the Hygge programming language, we recommend a basic understanding of structural operational semantics, substitutions
 and inference rules from logic. With regards to type systems, it is helpful to be knowledgable about typing rules and the different
-typing disciplines: strong vs. weak, nominal vs. structural and static vs. dynamic.
+typing disciplines: strong vs. weak, nominal vs. structural and static vs. dynamic\cite{pierce}.
 
 That is, knowledge corresponding to the curriculum of the course ``02247 - Compiler Construction''\cite{curriculum_02247} covers all of the above-mentioned prerequisites.
 
@@ -52,8 +52,7 @@ inheritance in the form of both abstract classes and interfaces and method overl
 Since Java 8, there has been a shift towards providing support for more Functional 
 programming features like anonymous functions (lambdas), higher-order functions, immutable
 structures (records), pattern matching and discriminated unions in the form of sealed 
-interfaces. We will briefly review a select number of these newer functional features
-and compare them to other functional languages.
+interfaces.
 
 The most relevant features from newer versions of Java, described in their respective ``Java Enhancement Proposals'' (JEP),
 which will be investigated throughout this thesis, are as follows:
