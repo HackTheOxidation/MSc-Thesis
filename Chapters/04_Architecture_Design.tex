@@ -7,7 +7,7 @@ few types and functions that form a straight-forward pipeline. There are however
 
 The design is not very flexible as there is a lot of coupling, some code duplication and deeply nested code. The different
 phases depend on concretizations rather than interfaces and they are monoliths; for example, the interpreters \texttt{reduce}
-implements the entire set of reduction rules, aside from a few miscellanious utilities. If a student wants to compare two different
+implements the entire set of reduction rules, aside from a few miscellaneous utilities. If a student wants to compare two different
 implementation strategies for a while loop, for example, they have to change to overwrite the existing code and then test it,
 potentially getting confused along the way. The same principle applies for the typechecker and code generator as well.
 
@@ -22,7 +22,7 @@ and code generator phases.
 When using \texttt{F\#}, the \texttt{dotnet} CLI provides a simple build and project management tool which comes by default
 with the installation of the \textit{.NET}-platform. In the Java world, the choice is a little more nuanced as there is
 no standard build system supplied with an installation of a JDK. There are, however, quite a few choices, with some of the
-most popular choices being Apache \texttt{Maven}\cite{maven}, \textit{Gradle}\cite{Gradle} and Googles \textit{Bazel}\cite{bazel} built system.
+most popular choices being Apache \texttt{Maven}\cite{maven}, \textit{Gradle}\cite{gradle} and Googles \textit{Bazel}\cite{bazel} built system.
 
 Assuming that the incoming students don't have any experience with any particular build system, it is desirable that the
 build system of choice for \texttt{JHygge} is as easy to learn and use to lessen the burden. \textit{Maven} is very
