@@ -1,10 +1,29 @@
 \chapter{Conclusion}
 
 To summarise, in this MSc Thesis project we have gone through the phases of defining requirements, architecting, designing, implementing
-and testing a new compiler for the Hygge programming language called \texttt{JHygge}, which is written in the \texttt{Java} programming
+and testing a new compiler for the Hygge programming language called \texttt{JHygge} for use in the course ``02247 - Compiler Construction''\cite{curriculum_02247}
+at the Technical University of Denmark (DTU), which is written in the \texttt{Java} programming
 language (JDK 24) and generates bytecode for the JVM as its target. Analysing the existing reference compiler, \texttt{hyggec}, written in
 \texttt{F\#}, generating RISC-V assembly, also revealed opportunities for improvement with regards to the extensibility and flexibility
 of the design. This analysis allowed the authors to define 11 functional requirements (Figure \ref{fig:functional_requirements}) and
 5 non-functional requirements (Figure \ref{fig:nonfunctional_requirements}) as well as state two goals, or research questions, for
 the \texttt{JHygge} project centered around functional programming and design in ``modern'' \texttt{Java} (\textbf{G01}), and code generation
-for the Java Virtual Machine (\textbf{G02}).
+for the Hygge language on the Java Virtual Machine (\textbf{G02}). With requirements and goals set, a new architecture and design has been proposed
+based on an intersection of principles from the Object-Oriented and Functional programming paradigms. Aside from the requirement to use \texttt{Java}
+release version 24, in this architecture, it was also decided to use \textit{Gradle}\cite{gradle} for build and dependency management, \texttt{ANTLR4}\cite{antlr4}
+for parser generation, and the Class-file API\cite{jep484} to manipulate \texttt{.class}-files to generate JVM bytecode. For testing, an automated
+testing suite akin to that of \texttt{hyggec}\cite{hyggec} was developed, which tests each of the compilation phases with user-defined Hygge test
+programs organized in a directory structure. Furthermore, an end-user test was conducted, where current and former students of the course
+``02247 - Compiler Construction'' were invited to text the extensibility and user-friendliness of \texttt{JHygge} by extending it with an
+expression for arithmetic subtraction. Unfortunately, none of the ca. 200 invited students chose to participate in the test, so there is no data 
+to assess whether or not the newly designed \texttt{JHygge} achieves better flexibility, extensibility and user-friendliness.
+However, it was possible to assess the degree to which \texttt{JHygge} achieves its functional and non-functional requirements;
+the final implementation of \texttt{JHygge} was deemed to fulfil 9 out of 11 functional requirements and all 5 non-functional requirements.
+The two functional requirements not met by \texttt{JHygge}, \textbf{F07} and \textbf{F08} regarding ``peephole'' optimization
+and Administrative-Normal-Form (ANF), respectively, were also prioritized low and as optional extras not essential to the success of the project
+as indicated by the initial MoSCoW\cite{moscow} analysis.
+Regarding the goals of the project, it was found that support for Functional programming in \texttt{Java} (\textbf{G01}) has
+indeed improved in the recent releases, yet there are still a lot of room for improvement as some of the more advanced functional programming
+features are poorly supported or missing entirely. On a more positive note, bytecode generation for the Hygge programming language on the
+JVM (\textbf{G02}) turned out to be a success using the new Class-file API from \texttt{Java} 24; it was possible to generate JVM bytecode
+for every language feature of Hygge in declarative style, and even emulate the structural type system of Hygge on the nominally-typed JVM.
