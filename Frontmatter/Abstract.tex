@@ -1,8 +1,25 @@
 \section*{Abstract}
 \addcontentsline{toc}{section}{Abstract}
-\blindtext
 
-
-
+The Hygge programming language\cite{lecture_notes} is a didactic functional programming language designed by A. Scalas
+for use in the course ``02247 - Compiler Construction''\cite{curriculum_02247} at the Technical University of Denmark (DTU).
+A reference compiler, called \texttt{hyggec}\cite{hyggec}, is written in the \texttt{F\#} programming language and
+generates assembly for the RISC-V instruction set architecture as its target language. This presents a challenge,
+as DTU admits many international students to the MSc programmin in Computer Science and Engineering and only some of them
+are familiar with functional programming and RISC-V. In an attempt to increase accessibility and ease the learning curve for students
+without said experience, this paper presents a redesign of \texttt{hyggec} written in the \texttt{Java} programming language
+called \texttt{JHygge}. Aside from being written in \texttt{Java}, this new compiler will also generate bytecode for
+the Java Virtual Machine (JVM) as its target language instead of RISC-V, as incoming students are required to have
+experience with \texttt{Java} and thus should have some level of familiarity with the JVM. Yet, the functional design
+of \texttt{hyggec} has many properties that are desirable to retain. At the time of writing, the latest release of \texttt{Java},
+version 24, offers improved support for functional programming, so this thesis will investigate relevant new features
+and apply them to \texttt{JHygge}. Another new feature of \texttt{Java} 24 is the Class-File API\cite{jep484}, which
+allows the programmer to manipulate \texttt{.class}-files will also be used in \texttt{JHygge} to generate bytecode
+for the JVM. After having specified functional and non-functional requirements, proposed a redesigned architecture,
+implemented and tested each of the compilation phases and Hygge language features, the final implementation of \texttt{JHygge}
+showed the ability to generate JVM bytecode correctly implementing the semantics of all the Hygge language features
+that should be supported using the Class-file API. Although having conducted an end-user test with ca. 200 current and
+former students of the course ``02247'', the attempts to improve flexibility, extensibility and user-friendliness with
+the new redesign could not be assessed as none of the invited students chose to participate.
 
 
