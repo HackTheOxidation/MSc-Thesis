@@ -402,7 +402,6 @@ This makes for a straight-forward, concise and declarative implementation of Hyg
 \begin{lstlisting}[language=Java]
 // From JVMControlFlowCodeGenerator.java
 public class JVMControlFlowCodeGenerator<E extends TypingEnvironment, T extends Type> {
-
   public CodeBuilder generateCode(
       JVMCodeGenerator<E, T> codeGenerator,
       JVMCodeGeneratorEnvironment env,
@@ -411,22 +410,18 @@ public class JVMControlFlowCodeGenerator<E extends TypingEnvironment, T extends 
       If<E, T> ifExpr) {
     Label labelTrue = codeBuilder.newLabel();
     Label labelFalse = codeBuilder.newLabel();
-
     // Generate code for the condition expression and jump to true branch
     // if condition is not 0
     codeBuilder = codeGenerator.generateCode(ifExpr.condition(), env, codeBuilder).ifne(labelTrue);
-
     // Generate code for false branch
     codeBuilder =
         codeGenerator
             .generateCode(ifExpr.ifFalse(), env, codeBuilder)
             .goto_(labelFalse)
             .labelBinding(labelTrue);
-
     // Generate code for true branch
     return codeGenerator.generateCode(ifExpr.ifTrue(), env, codeBuilder).labelBinding(labelFalse);
   }
- 
   // Remaining methods ...
 }
 \end{lstlisting}
@@ -571,9 +566,7 @@ In figure \ref{fig:jvm_constructor_builder}, we show the implementation of code 
                 ClassDesc.ofInternalName("java/util/HashMap"),
                 "get",
                 MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)Ljava/lang/Object;"));
-
     var fieldType = TypeUtility.expandType(node.env(), node.type());
-
     return JVMCodeGenerationUtility.checkAndUnbox(codeBuilder, fieldType);
   }
     \end{lstlisting}
@@ -600,15 +593,11 @@ of code generation for assignment expressions can be seen on figure \ref{fig:jvm
       Assign<E, T> assignExpr) {
     return switch (assignExpr.target().expr()) {
       case Var<E, T> v -> // Redacted 
-      
       case FieldSelect<E, T> v -> {
         codeBuilder = generateCode(v.target(), env, codeBuilder).ldc(v.field());
         codeBuilder = generateCode(assignExpr.rhs(), env, codeBuilder);
-
         var rhsType = TypeUtility.expandType(assignExpr.rhs().env(), assignExpr.rhs().type());
-
         codeBuilder = JVMCodeGenerationUtility.boxPrimitive(codeBuilder, rhsType);
-
         codeBuilder =
             codeBuilder
                 .invokevirtual(
@@ -617,7 +606,6 @@ of code generation for assignment expressions can be seen on figure \ref{fig:jvm
                     MethodTypeDesc.ofDescriptor(
                         "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
                 .pop();
-
         yield structCodeGenerator.generateCode(this, env, codeBuilder, ast, v);
       }
       default -> // Redacted
@@ -625,6 +613,6 @@ of code generation for assignment expressions can be seen on figure \ref{fig:jvm
   }
    
   \end{lstlisting}
-  \caption{Excerpt of the implemention of code generation for assignment expressions with an emphasis on field selections.}
+  \caption{Excerpt of the implementation of code generation for assignment expressions with an emphasis on field selections.}
   \label{fig:jvm_field_assignment}
 \end{figure}

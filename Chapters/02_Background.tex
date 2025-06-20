@@ -11,14 +11,7 @@ programming paradigms, design patterns\cite{clean_architecture} and compiler arc
 
 We recommend that the reader has knowledge of and experience with programming languages and programming paradigms.
 That is, we suggest that the reader knows at least one Object-Oriented language, preferably \texttt{Java}, and at least one Functional language,
-preferably \texttt{F\#}. This includes knowing the four core principles/the four pillars of Object-Oriented programming\cite{clean_architecture}:
-
-\begin{enumerate}
-\item Abstraction
-\item Encapsulation
-\item Inheritance
-\item Polymorphism
-\end{enumerate}
+preferably \texttt{F\#}. This includes knowing the four core principles/the four pillars of Object-Oriented programming\cite{clean_architecture}: Abstraction, Encapsulation, Inheritance and Polymorphism.
 
 From the Functional programming paradigm, we assume that the reader is familiar with principles such as immutability, referential transparency,
 higher-order functions. This roughly corresponds to the curriculum of the course ``02157 - Functional Programming''\cite{curriculum_02157} at the Technical University of 
@@ -124,8 +117,8 @@ class Main {
 \label{fig:dummy_java_code}
 \end{figure}
 
-What the code above does is not important. If one then compiles the code with \texttt{javac} (OpenJDK 24.0.0) and then
-dissassembles the resulting \texttt{.class}-file with \texttt{javap}, one obtains (depending on JDK release and compiler flags)
+What the code in figure \ref{fig:dummy_java_code} does is not important. If one then compiles the code with \texttt{javac} (OpenJDK 24.0.0) and then
+disassembles the resulting \texttt{.class}-file with \texttt{javap}, one obtains (depending on JDK release and compiler flags)
 the JVM bytecode in human-readable form, which is shown on figure \ref{fig:dummy_bytecode}:
 
 \begin{figure}[H]
@@ -188,14 +181,14 @@ the bytecode level; both constructors and instance methods have a reference to t
 The primary difference is that the constructor invokes the \texttt{Object}\cite{java_object} constructor and calls
 for invoking the \texttt{Main} constructor itself must be done using the \texttt{invokespecial}\cite{jvm_spec} instruction. On the other
 hand, calling instance methods and static methods are done using the \texttt{invokevirtual} and \texttt{invokestatic} instructions,
-respectively. The hashmarks with numbers, i.e. \#33, are references to the run-time constant pool.
+respectively. The hash-marks with numbers, i.e. \#33, are references to the run-time constant pool.
 
 \section{Compiler Architecture and Design}
 
 From a birds eye perspective, a compiler is a program that transforms textual input data to some other representation in the form of a target language.
 The target language can be many different types of languages: from low-level machine languages to other high-level programming languages.
 The textual input data usually comes in the form of a data stream, either as a file stream when reading a source file or as a character stream when
-reading user input from a console or tty. The most generic way to describe the typical architecture of a compiler would be the ``Pipes and Filters''
+reading user input from a console. The most generic way to describe the typical architecture of a compiler would be the ``Pipes and Filters''
 architectural pattern\cite{cunningham}. In this pattern, the program consists of independent stages of data transformations, which are connected as a unified system.
 As the name of the pattern suggests, there are two types of elements in this architecture: pipes and filters. Filters are stages of data transformations,
 and the pipes are the connections between filters, which acts as data adapters.
@@ -212,7 +205,7 @@ essentially just function composition at the architectural level, as every filte
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Pictures/basic_compiler_phases.png}
+\includegraphics[width=0.7\textwidth]{Pictures/basic_compiler_phases.png}
 \caption{Basic phases of a Compiler made by A. Scalas.}
 \label{fig:compiler_phases}
 \end{figure}
@@ -309,7 +302,7 @@ phases during the later part of ``02247 - Compiler Construction''\cite{curriculu
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Pictures/hyggec_compiler_phases.png}
+\includegraphics[width=0.7\textwidth]{Pictures/hyggec_compiler_phases.png}
 \caption{The compiler architecture of \texttt{hyggec} made by A. Scalas.}
 \label{fig:hyggec_compiler_phases}
 \end{figure}
