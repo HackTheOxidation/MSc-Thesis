@@ -1,11 +1,6 @@
-# How do I change the information in the template?
-Setup/Statics.tex
+# MSc Thesis
 
-# Where can I suggest changes?
-latex-support@student.dtu.dk
+This is my Masters' Thesis that I wrote when studying at the Technical University of Denmark.
+It got me a top grade.
 
-# Where can I go for help?
-Check http://latex.dtu.dk/ for open office hours or send your question via email (latex-support@student.dtu.dk) or Facebook messenger (https://www.facebook.com/DTULatex/)
-
----
-Last updated 07/02/2022 by s164419@student.dtu.dk
+You are free to cite it (but don't do plagerism) and the code for JHygge is open source.
